@@ -1,0 +1,90 @@
+{
+  "name": "bbcode-for-tsdm",
+  "displayName": "BBCode for TSDM",
+  "description": "BBCode support for tsdm forum",
+  "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tsdm-mg/vscode-bbcode-for-tsdm"
+  },
+  "publisher": "realth000",
+  "engines": {
+    "vscode": "^1.108.1"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "keywords": [
+    "bbcode",
+    "tsdm",
+    "discuz"
+  ],
+  "main": "./dist/extension.js",
+  "extensionDependencies": [
+    "vscode.html-language-features"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "bbcode",
+        "aliases": [
+          "BBCode",
+          "bbcode"
+        ],
+        "extensions": [
+          ".bbcode.txt",
+          ".bbcode"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "htmlLanguageParticipants": [
+      {
+        "languageId": "bbcode",
+        "autoInsert": true
+      }
+    ],
+    "grammars": [
+      {
+        "language": "bbcode",
+        "scopeName": "source.bbcode",
+        "path": "./syntaxes/bbcode.tmLanguage.json"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "pnpm run package",
+    "compile": "webpack",
+    "watch": "webpack --watch",
+    "package": "webpack --mode production --devtool hidden-source-map",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "pnpm run compile-tests && pnpm run compile && pnpm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@stylistic/eslint-plugin": "^5.8.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "22.x",
+    "@types/vscode": "^1.108.1",
+    "@typescript-eslint/eslint-plugin": "^8.55.0",
+    "@typescript-eslint/parser": "^8.55.0",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2",
+    "eslint": "^9.39.2",
+    "eslint-import-resolver-typescript": "^4.4.4",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-n": "^17.24.0",
+    "eslint-plugin-promise": "^7.2.1",
+    "eslint-plugin-regexp": "^3.0.0",
+    "eslint-plugin-unicorn": "^63.0.0",
+    "globals": "^17.3.0",
+    "ts-loader": "^9.5.4",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.52.0",
+    "webpack": "^5.104.1",
+    "webpack-cli": "^6.0.1"
+  }
+}

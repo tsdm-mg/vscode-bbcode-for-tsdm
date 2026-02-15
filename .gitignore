@@ -1,0 +1,7 @@
+*.orig
+*.rej
+*.swp
+node_modules
+*.vsix
+.env
+/dist

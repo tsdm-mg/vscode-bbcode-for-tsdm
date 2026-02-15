@@ -1,0 +1,94 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "BBCode",
+	"patterns": [
+		{
+			"name": "meta.tag.bbcode.start.attributed",
+			"begin": "(\\[)([a-zA-Z]+)(=)",
+			"end": "(\\])",
+			"beginCaptures": {
+				"1": {
+					"name": "punctuation.definition.tag.begin.bbcode"
+				},
+				"2": {
+					"name": "entity.name.tag.bbcode"
+				},
+				"3": {
+					"name": "punctuation.separator.parameter.bbcode"
+				}
+			},
+			"endCaptures": {
+				"1": {
+					"name": "punctuation.definition.tag.end.bbcode"
+				}
+			},
+			"patterns": [
+				{
+					"match": "[^\\]]+",
+					"name": "variable.parameter.bbcode"
+				}
+			]
+		},
+		{
+			"name": "meta.tag.bbcode.start.general",
+			"begin": "(\\[)([a-zA-Z]+)",
+			"end": "(\\])",
+			"beginCaptures": {
+				"1": {
+					"name": "punctuation.definition.tag.begin.bbcode"
+				},
+				"2": {
+					"name": "entity.name.tag.bbcode"
+				}
+			},
+			"endCaptures": {
+				"1": {
+					"name": "punctuation.definition.tag.end.bbcode"
+				}
+			}
+		},
+		{
+			"name": "meta.tag.bbcode.end",
+			"begin": "(\\[/)([a-zA-Z]+)",
+			"end": "(\\])",
+			"beginCaptures": {
+				"1": {
+					"name": "punctuation.definition.tag.begin.bbcode"
+				},
+				"2": {
+					"name": "entity.name.tag.bbcode"
+				}
+			},
+			"endCaptures": {
+				"1": {
+					"name": "punctuation.definition.tag.end.bbcode"
+				}
+			}
+		},
+		{
+			"include": "text.html.basic"
+		}
+	],
+	"repository": {
+		"keywords": {
+			"patterns": [
+				{
+					"name": "keyword.control.bbcode",
+					"match": "\\b(if|while|for|return)\\b"
+				}
+			]
+		},
+		"strings": {
+			"name": "string.quoted.double.bbcode",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.bbcode",
+					"match": "\\\\."
+				}
+			]
+		}
+	},
+	"scopeName": "source.bbcode"
+}

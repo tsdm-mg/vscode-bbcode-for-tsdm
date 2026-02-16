@@ -2,6 +2,8 @@
 
 VSCode扩展，支持TSDM风格的BBCode。
 
+![intro.gif](./docs/images/intro.gif)
+
 ## 功能
 
 * [x] 标签补全

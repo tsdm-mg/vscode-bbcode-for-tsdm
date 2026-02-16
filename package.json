@@ -38,6 +38,12 @@
         "configuration": "./language-configuration.json"
       }
     ],
+    "snippets": [
+      {
+        "language": "bbcode",
+        "path": "./snippets/bbcode.json"
+      }
+    ],
     "htmlLanguageParticipants": [
       {
         "languageId": "bbcode",

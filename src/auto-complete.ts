@@ -1,26 +1,38 @@
 import * as vscode from 'vscode'
 import { allTags, Tag } from './tags'
 
-const allCompletionItems: vscode.CompletionItem[] = allTags.map(tag => tagToCompletionItem(tag))
+const allCompletionItems: vscode.CompletionItem[] = allTags.flatMap(tag => tagToCompletionItem(tag))
 
-function tagToCompletionItem(tag: Tag): vscode.CompletionItem {
+function tagToCompletionItem(tag: Tag): vscode.CompletionItem[] {
+  const items: vscode.CompletionItem[] = []
   const item = new vscode.CompletionItem(tag.label, vscode.CompletionItemKind.Snippet)
   item.detail = tag.name
   if (tag.attribute === undefined) {
     if (tag.selfClosing) {
       item.insertText = new vscode.SnippetString(`${tag.label}]`)
     } else {
-      item.insertText = new vscode.SnippetString(`${tag.label}]$0[${tag.label}]`)
+      item.insertText = new vscode.SnippetString(`${tag.label}]$0[/${tag.label}]`)
     }
   } else {
     if (tag.selfClosing) {
       item.insertText = new vscode.SnippetString(`${tag.label}=${tag.attribute.snippet}]`)
     } else {
-      item.insertText = new vscode.SnippetString(`${tag.label}=${tag.attribute.snippet}]$0[${tag.label}]`)
+      item.insertText = new vscode.SnippetString(`${tag.label}=${tag.attribute.snippet}]$0[/${tag.label}]`)
+    }
+  }
+  items.push(item)
+
+  if (tag.snippets && tag.snippets.length > 0) {
+    for (const snippet of tag.snippets) {
+      const snippetItem = new vscode.CompletionItem(snippet.prefix, vscode.CompletionItemKind.Snippet)
+      snippetItem.detail = snippet.name
+      // snippetItem.label = snippet.name
+      snippetItem.insertText = new vscode.SnippetString(snippet.body)
+      items.push(snippetItem)
     }
   }
 
-  return item
+  return items
 
 }
 
@@ -37,7 +49,7 @@ export class BBCodeCompletionItemProvider implements vscode.CompletionItemProvid
     const lastOpenIndex = prefix.lastIndexOf('[')
     if (lastOpenIndex !== -1) {
       const partialTag = lineText.slice(Math.max(0, lastOpenIndex + 1))
-      return allTags.filter(tag => tag.label.startsWith(partialTag)).map(tag => tagToCompletionItem(tag))
+      return allTags.filter(tag => tag.label.startsWith(partialTag)).flatMap(tag => tagToCompletionItem(tag))
     }
 
     return []

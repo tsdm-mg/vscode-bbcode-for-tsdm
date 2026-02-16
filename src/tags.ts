@@ -1,3 +1,4 @@
+import { Snippet } from './snippets'
 import { colorValidator } from './tags/color-validator'
 
 /**
@@ -48,6 +49,12 @@ export interface Tag {
    * Is this tag will be rendered as a whole row.
    */
   layout: 'inline' | 'block'
+
+
+  /**
+   * Tag related snippets.
+   */
+  snippets?: Snippet[]
 }
 
 export const allTags: Tag[] = [
@@ -61,6 +68,23 @@ export const allTags: Tag[] = [
     },
     selfClosing: false,
     layout: 'block',
+    snippets: [
+      {
+        name: 'Align Left',
+        prefix: 'alignleft',
+        body: 'align=left]$0[/align]',
+      },
+      {
+        name: 'Align Center',
+        prefix: 'aligncenter',
+        body: 'align=center]$0[/align]',
+      },
+      {
+        name: 'Align Right',
+        prefix: 'alignright',
+        body: 'align=right]$0[/align]',
+      },
+    ],
   },
   {
     name: 'backgroundColor',
@@ -107,6 +131,38 @@ export const allTags: Tag[] = [
     },
     selfClosing: false,
     layout: 'inline',
+    snippets: [
+      {
+        name: 'Size 1',
+        prefix: 'size1',
+        body: 'size=1]$0[/size]',
+      },
+      {
+        name: 'Size 2',
+        prefix: 'size2',
+        body: 'size=2]$0[/size]',
+      },
+      {
+        name: 'Size 3',
+        prefix: 'size3',
+        body: 'size=3]$0[/size]',
+      },
+      {
+        name: 'Size 4',
+        prefix: 'size4',
+        body: 'size=4]$0[/size]',
+      },
+      {
+        name: 'Size 5',
+        prefix: 'size5',
+        body: 'size=5]$0[/size]',
+      },
+      {
+        name: 'Size 6',
+        prefix: 'size6',
+        body: 'size=6]$0[/size]',
+      },
+    ],
   },
   {
     name: 'freeArea',
@@ -147,7 +203,7 @@ export const allTags: Tag[] = [
   },
   {
     name: 'list',
-    label: 'li',
+    label: 'list',
     attribute: {
       required: false,
       snippet: '1',
@@ -155,11 +211,23 @@ export const allTags: Tag[] = [
     },
     selfClosing: false,
     layout: 'block',
+    snippets: [
+      {
+        name: 'Ordered List',
+        prefix: 'orderedlist',
+        body: 'list=1]\n[*]$0\n[/list]',
+      },
+      {
+        name: 'Bullet List',
+        prefix: 'bulletlist',
+        body: 'list]\n[*]$0\n[/list]',
+      },
+    ],
   },
   {
     name: 'listItem',
     label: '*',
-    selfClosing: false,
+    selfClosing: true,
     layout: 'block',
   },
   {

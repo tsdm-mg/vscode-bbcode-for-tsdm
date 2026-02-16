@@ -112,6 +112,11 @@ export const allTags: Tag[] = [
   {
     name: 'textColor',
     label: 'color',
+    attribute: {
+      required: true,
+      snippet: '${1:value}',
+      validator: colorValidator,
+    },
     selfClosing: false,
     layout: 'inline',
   },

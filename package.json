@@ -67,7 +67,12 @@
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "pnpm run compile-tests && pnpm run compile && pnpm run lint",
     "lint": "eslint src",
-    "test": "vscode-test"
+    "test": "vscode-test",
+    "postinstall": "cd ./lsp-server && pnpm install && cd .."
+  },
+  "dependencies": {
+    "glob": "^13.0.6",
+    "vscode-languageclient": "^9.0.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -1,19 +1,24 @@
 {
-    "compilerOptions": {
-        "module": "Node16",
-        "target": "ES2022",
-        "lib": [
-            "ES2022"
-        ],
-        "sourceMap": true,
-        "rootDir": "src",
-        "strict": true, /* enable all strict type-checking options */
-        "outDir": "dist",
-        "moduleResolution": "node16",
-        "noUnusedLocals": true,
-        "noUnusedParameters": true,
-        "erasableSyntaxOnly": true,
-        "noFallthroughCasesInSwitch": true,
-        "noUncheckedSideEffectImports": true,
+  "compilerOptions": {
+    "module": "Node16",
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "sourceMap": true,
+    "rootDir": "src",
+    "strict": true /* enable all strict type-checking options */,
+    "outDir": "dist",
+    "moduleResolution": "node16",
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true
+  },
+  "include": ["src"],
+  "exclude": ["node_modules"],
+  "references": [
+    {
+      "path": "./lsp-server"
     }
+  ]
 }

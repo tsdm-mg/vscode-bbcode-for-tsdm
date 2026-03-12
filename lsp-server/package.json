@@ -1,0 +1,19 @@
+{
+  "name": "bbcode-language-server",
+  "description": "BBCode language server for tsdm",
+  "version": "1.0.0",
+  "author": "realth000",
+  "license": "MIT",
+  "engines": {
+    "node": "*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tsdm-mg/vscode-bbcode-for-tsdm"
+  },
+  "dependencies": {
+    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver-textdocument": "^1.0.11"
+  },
+  "scripts": {}
+}

@@ -1,18 +1,28 @@
-import path from 'path'
+import path from 'node:path'
 import * as vscode from 'vscode'
-import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient/node'
-import { BBCodeCompletionItemProvider } from './auto-complete'
+import {
+  LanguageClient,
+  LanguageClientOptions,
+  ServerOptions,
+  TransportKind,
+} from 'vscode-languageclient/node'
 
 let client: LanguageClient
 
 export async function activate(ctx: vscode.ExtensionContext) {
   console.log('>>> client activated')
 
-  const serverModule = ctx.asAbsolutePath(path.join('lsp-server', 'out', 'server.js'))
+  // Activate html extension.
+  const htmlExtension = vscode.extensions.getExtension(
+    'vscode.html-language-features',
+  )
+  await htmlExtension?.activate()
 
-  console.log('>>> server path:', serverModule)
+  const serverModule = ctx.asAbsolutePath(
+    path.join('lsp-server', 'out', 'server.js'),
+  )
 
-  const serverOptions : ServerOptions = {
+  const serverOptions: ServerOptions = {
     run: { module: serverModule, transport: TransportKind.ipc },
     debug: {
       module: serverModule,
@@ -21,7 +31,7 @@ export async function activate(ctx: vscode.ExtensionContext) {
   }
 
   const clientOptions: LanguageClientOptions = {
-    documentSelector: [{ scheme : 'file', language: 'bbcode' }],
+    documentSelector: [{ scheme: 'file', language: 'bbcode' }],
     synchronize: {
       fileEvents: vscode.workspace.createFileSystemWatcher('**/.clientrc'),
     },
@@ -37,12 +47,4 @@ export async function activate(ctx: vscode.ExtensionContext) {
   console.log('>>> client starting')
 
   await client.start()
-
-  return
-  const htmlExtension = vscode.extensions.getExtension('vscode.html-language-features')
-  await htmlExtension?.activate()
-
-  const autoCompleteProvider = new BBCodeCompletionItemProvider()
-  ctx.subscriptions.push(vscode.languages.registerCompletionItemProvider({ language: 'bbcode' }, autoCompleteProvider, '['))
 }
-

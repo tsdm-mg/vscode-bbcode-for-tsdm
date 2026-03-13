@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "module": "Node16",
+    "module": "node20",
     "target": "ES2022",
     "lib": ["ES2022"],
     "sourceMap": true,
@@ -10,7 +10,7 @@
     "moduleResolution": "node16",
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "erasableSyntaxOnly": true,
+    "erasableSyntaxOnly": false,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },

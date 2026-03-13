@@ -1,27 +1,36 @@
 import js from '@eslint/js'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
-import unicornPlugin from 'eslint-plugin-unicorn'
+import unicorn from 'eslint-plugin-unicorn'
 import importPlugin from 'eslint-plugin-import'
 import stylistic from '@stylistic/eslint-plugin'
 import { defineConfig, globalIgnores } from 'eslint/config'
+import prettierConfig from 'eslint-config-prettier'
 
 export default defineConfig([
-  globalIgnores(['dist', 'node_modules']),
+  globalIgnores([
+    'dist',
+    'node_modules',
+    'lsp-server/node_modules',
+    'lsp-server/out',
+  ]),
 
   {
-    files: ['src/**/*.{ts,js}'],
+    files: [
+      'vite.config.ts',
+      'vitest.config.ts',
+      'src/**/*.{ts,js}',
+      'lsp-server/src/**/*.{ts,js}',
+    ],
     extends: [
       js.configs.recommended,
-      tseslint.configs.strict,
-      tseslint.configs.strictTypeChecked,
-      tseslint.configs.stylistic,
-      tseslint.configs.stylisticTypeChecked,
+      ...tseslint.configs.strictTypeChecked,
+      ...tseslint.configs.stylisticTypeChecked,
+      unicorn.configs.recommended,
     ],
     plugins: {
       import: importPlugin,
       '@stylistic': stylistic,
-      unicorn: unicornPlugin,
     },
     languageOptions: {
       globals: {
@@ -29,60 +38,70 @@ export default defineConfig([
         ...globals.es2023,
       },
       parserOptions: {
-        project: './tsconfig.json',
+        project: ['./tsconfig.json', './lsp-server/tsconfig.json'],
         tsconfigRootDir: import.meta.dirname,
       },
     },
     settings: {
       'import/resolver': {
         typescript: {
-          project: './tsconfig.json'
-        }
-      }
+          project: './tsconfig.json',
+        },
+      },
     },
     rules: {
-      'import/no-unresolved': 'error',
+      'import/no-unresolved': ['error'],
       'import/order': [
         'error',
         {
-          groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index', 'object', 'type'],
+          groups: [
+            'builtin',
+            'external',
+            'internal',
+            ['parent', 'sibling', 'index'],
+            'object',
+            'type',
+          ],
           alphabetize: { order: 'asc', caseInsensitive: false },
           pathGroups: [
-            { pattern: '@/**', group: 'internal', position: 'after' }
+            { pattern: '@/**', group: 'internal', position: 'after' },
           ],
           'newlines-between': 'never',
         },
       ],
       'import/no-cycle': 'error',
-
-      // We are using commonjs.
-      'import/extensions': 'off',
+      'import/extensions': [
+        'error',
+        'ignorePackages',
+        {
+          ts: 'never',
+        },
+      ],
 
       '@stylistic/semi': ['error', 'never'],
       '@stylistic/quotes': ['error', 'single'],
       '@stylistic/indent': ['error', 2],
       '@stylistic/space-before-function-paren': ['error', 'never'],
       '@stylistic/object-curly-spacing': ['error', 'always'],
-      '@stylistic/array-bracket-spacing': ['error', 'never'],
-      '@stylistic/block-spacing': ['error', 'always'],
-      '@stylistic/comma-dangle': ['error', {
-        'arrays': 'always-multiline',
-        'objects': 'always-multiline',
-        'imports': 'always-multiline',
-        'exports': 'always-multiline',
-        'functions': 'only-multiline',
-        'importAttributes': 'always-multiline',
-        'dynamicImports': 'always-multiline',
-        'enums': 'always-multiline',
-        'generics': 'always-multiline',
-        'tuples': 'always-multiline'
-      }],
 
       // Abbr is useful.
       'unicorn/prevent-abbreviations': 'off',
-      'unicorn/no-array-callback-reference': 'error',
 
-      "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }]
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          args: 'all',
+          argsIgnorePattern: '^_',
+          caughtErrors: 'all',
+          caughtErrorsIgnorePattern: '^_',
+          destructuredArrayIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          ignoreRestSiblings: true,
+        },
+      ],
     },
-  }
+  },
+
+  // Disable conflict rules.
+  prettierConfig,
 ])

@@ -1,6 +1,6 @@
 import { Translations } from './i18n/i18n'
 import { Snippet } from './snippets'
-import { colorValidator } from './tags/color-validator'
+import { colorValidator } from './validators/color-validator'
 
 /**
  * Defines attribute rules for BBCode tags.

@@ -43,4 +43,23 @@ export const i18nZh: Translations = {
     underline: { description: '下划线' },
     userMention: { description: '艾特用户' },
   },
+  diagnostic: {
+    unknownTag: function (name: string): string {
+      return `未知tag "${name}"`
+    },
+    attributeNotAllowed: 'tag不允许拥有属性',
+    attributeRequired: 'tag必须填写属性',
+    invalidAttributeValue: function (
+      attr?: string,
+      allowedAttr?: string,
+    ): string {
+      return (
+        (attr === undefined ? '无效的属性' : `无效的属性值 "${attr}"`) +
+        (allowedAttr === undefined ? '' : `。 合法的属性值：${allowedAttr}`)
+      )
+    },
+    invalidColor: function (attr?: string): string {
+      return `无效的颜色${attr === undefined ? '' : ` "${attr}"`}`
+    },
+  },
 }

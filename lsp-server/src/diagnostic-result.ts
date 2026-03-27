@@ -3,10 +3,14 @@
  *
  * The type will be mapped to severity level in vscode.
  */
-export type DiagnosticSeverity = 'info' | 'warning' | 'eror'
+export type DiagnosticSeverity = 'info' | 'warning' | 'error'
 
 /**
- * A diagnostic error.
+ * A diagnostic message.
+ *
+ * Indicating some error or warning or info that scanned in the AST.
+ *
+ * Each message occurs in a range and is defined with different severity error.
  */
 export interface DiagnosticMessage {
   /**
@@ -20,14 +24,9 @@ export interface DiagnosticMessage {
   end: number
 
   /**
-   * Severity level.
+   * The error
    */
-  severity: DiagnosticSeverity
-
-  /**
-   * Message
-   */
-  message: string
+  error: DiagnosticError
 }
 
 /**
@@ -43,15 +42,18 @@ export type DiagnosticError =
 export const DiagErr = {
   unknownTag: (name: string): DiagErrUnknownTag => ({
     _kind: 'DiagErrUnknownTag',
+    severity: 'error',
     name,
   }),
 
   attributeNotAllowed: (): DiagErrAttributeNotAllowed => ({
     _kind: 'DiagErrAttributeNotAllowed',
+    severity: 'error',
   }),
 
   attributeRequired: (): DiagErrAttributeRequired => ({
     _kind: 'DiagErrAttributeRequired',
+    severity: 'error',
   }),
 
   invalidAttributeValue: (
@@ -59,12 +61,14 @@ export const DiagErr = {
     allowedAttr?: string[],
   ): DiagErrInvalidAttributeValue => ({
     _kind: 'DiagErrInvalidAttributeValue',
+    severity: 'error',
     attr,
     allowedAttr,
   }),
 
   invalidColor: (): DiagErrInvalidColor => ({
     _kind: 'DiagErrInvalidColor',
+    severity: 'error',
   }),
 }
 
@@ -73,6 +77,9 @@ export const DiagErr = {
  */
 export interface DiagErrUnknownTag {
   _kind: 'DiagErrUnknownTag'
+
+  severity: 'error'
+
   /**
    * Tag name that is unknown.
    */
@@ -84,6 +91,8 @@ export interface DiagErrUnknownTag {
  */
 export interface DiagErrAttributeNotAllowed {
   _kind: 'DiagErrAttributeNotAllowed'
+
+  severity: 'error'
 }
 
 /**
@@ -91,10 +100,14 @@ export interface DiagErrAttributeNotAllowed {
  */
 export interface DiagErrAttributeRequired {
   _kind: 'DiagErrAttributeRequired'
+
+  severity: 'error'
 }
 
 export interface DiagErrInvalidAttributeValue {
   _kind: 'DiagErrInvalidAttributeValue'
+
+  severity: 'error'
 
   /**
    * Current invalid attribute value.
@@ -112,6 +125,8 @@ export interface DiagErrInvalidAttributeValue {
  */
 export interface DiagErrInvalidColor {
   _kind: 'DiagErrInvalidColor'
+
+  severity: 'error'
 
   /**
    * Current invalid color value.

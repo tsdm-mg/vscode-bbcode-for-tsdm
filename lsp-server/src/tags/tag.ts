@@ -1,4 +1,4 @@
-import { DiagnosticError } from '../diagnostic-result'
+import { DiagnosticError, DiagnosticMessage } from '../diagnostic-result'
 import { TagHead, TagTail } from '../token'
 
 export type BBCodeComponent = BBCodeTag | BBCodeText
@@ -232,22 +232,140 @@ export abstract class BBCodeTagBase implements BBCodeTag {
       }
     }
   }
+
+  diagnose(): DiagnosticMessage[] {
+    const messages: DiagnosticMessage[] = []
+
+    if (this.attribute !== undefined && this.attributeValidator !== undefined) {
+      messages.push(
+        ...this.attributeValidator(this.attribute).map((e) =>
+          this.makeAttributeDiagnosticMessage(e),
+        ),
+      )
+    }
+
+    for (const child of this.children) {
+      if (child instanceof BBCodeText) {
+      } else if (child instanceof BBCodeTagBase) {
+        messages.push(...child.diagnose())
+      } else {
+        // Unreachable.
+        throw Error('unsupported bbcode component ty')
+      }
+    }
+
+    return messages
+  }
+
+  private tagHeaderRange(): { start: number; end: number } {
+    if (this.isHead) {
+      // Add 1 offset to skip '[' before tag name.
+      return {
+        start: this.start,
+        end: this.start + 1 + this.name.length + 1,
+      }
+    } else {
+      // Add 2 offset to skip '[/' before tag name.
+      return {
+        start: this.start,
+        end: this.start + 2 + this.name.length + 1,
+      }
+    }
+  }
+
+  /**
+   * Get the range of tag name in head (or tail).
+   */
+  private tagNameRange(): { start: number; end: number } {
+    if (this.isHead) {
+      // Add 1 offset to skip '[' before tag name.
+      return {
+        start: this.start + 1,
+        end: this.start + 1 + this.name.length,
+      }
+    } else {
+      // Add 2 offset to skip '[/' before tag name.
+      return {
+        start: this.start + 2,
+        end: this.start + 2 + this.name.length,
+      }
+    }
+  }
+
+  /**
+   * Get the range of attribute value.
+   *
+   * That caller MUST ensure attribute is not undefined.
+   */
+  private attrRange(): { start: number; end: number } {
+    return {
+      start: this.start + 1 + this.name.length + 1,
+      end: this.start + 1 + this.name.length + 1 + this.attribute!.length,
+    }
+  }
+
+  /**
+   * Produce a diagnostic message that targets on the entire tag header.
+   *
+   * Use this range of message for tag-wide diagnostic errors.
+   */
+  private makeTagHeadDiagnosticMessage(
+    error: DiagnosticError,
+  ): DiagnosticMessage {
+    const { start, end } = this.tagHeaderRange()
+    return {
+      start,
+      end,
+      error,
+    }
+  }
+
+  /**
+   * Produce a diagnostic message that targets on tag name of the tag.
+   *
+   * Use this range of message for diagnostic errors specificly on tag name.
+   */
+  private makeTagNameDiagnosticMessage(
+    error: DiagnosticError,
+  ): DiagnosticMessage {
+    const { start, end } = this.tagNameRange()
+    return {
+      start,
+      end,
+      error,
+    }
+  }
+
+  /**
+   * Produce a diagnostic message that targets on the attributes value string.
+   *
+   * Use this range of message for diagnostic errors specificly on attribute value.
+   *
+   * The caller MUST ensure attribute is not undefined.
+   */
+  private makeAttributeDiagnosticMessage(
+    error: DiagnosticError,
+  ): DiagnosticMessage {
+    const { start, end } = this.attrRange()
+    return {
+      start,
+      end,
+      error,
+    }
+  }
 }
 
-export function dumpDiagnosticError(
+export function diagnoseBBCodeAST(
   bbcode: BBCodeComponent[],
-): DiagnosticError[] {
-  const errors: DiagnosticError[] = []
+): DiagnosticMessage[] {
+  const errors: DiagnosticMessage[] = []
 
   for (const node of bbcode) {
     if (node instanceof BBCodeText) {
       continue
-    }
-
-    if (node.attributeValidator !== undefined) {
-      errors.push(...node.attributeValidator(node.attribute))
+    } else if (node instanceof BBCodeTagBase) {
+      errors.push(...node.diagnose())
     }
   }
-
   return errors
 }

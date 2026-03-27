@@ -62,7 +62,10 @@ export class Lexer {
    * Is the lexer finished lexing.
    */
   private _isDone(): boolean {
-    return this._currTagStartPos >= this._input.length
+    return (
+      this._currTagStartPos >= this._input.length ||
+      this._scanPos >= this._input.length
+    )
   }
 
   /**
@@ -116,16 +119,16 @@ export class Lexer {
    */
   private _scanHead(): boolean {
     const nameBuffer: string[] = []
-    while (true) {
-      if (this._isDone()) {
-        // Here indicating a incomplete tag head and reaches the end of input, fallback to plain text.
-        // Don't forget to save the consumed '[' when we enter this function.
-        // Use the fixed end parameter because we know the '[' where starts and length is fixed to 1.
-        this._appendConsumedText('[', this._currTagStartPos + 1)
-        this._currTagStartPos += 1
-        this._appendText(nameBuffer)
-        return false
-      }
+    while (!this._isDone()) {
+      // if (this._isDone()) {
+      //   // Here indicating a incomplete tag head and reaches the end of input, fallback to plain text.
+      //   // Don't forget to save the consumed '[' when we enter this function.
+      //   // Use the fixed end parameter because we know the '[' where starts and length is fixed to 1.
+      //   this._appendConsumedText('[', this._currTagStartPos + 1)
+      //   this._currTagStartPos += 1
+      //   this._appendText(nameBuffer)
+      //   return false
+      // }
 
       const next = this._readChar()
       if (next === '=') {
@@ -139,12 +142,7 @@ export class Lexer {
         // Header with attribute.
         // Parse the attribute.
         const attrBuffer: string[] = []
-        while (true) {
-          if (this._isDone()) {
-            // Empty attribute string.
-            break
-          }
-
+        while (!this._isDone()) {
           const next2 = this._readChar()
           if (next2 === ']') {
             // Reach the end of attribute.
@@ -156,6 +154,12 @@ export class Lexer {
 
           attrBuffer.push(next2)
         }
+
+        this._appendConsumedText('=', this._currTagStartPos + 1)
+        this._currTagStartPos += 1
+        this._appendText(nameBuffer)
+        this._appendText(attrBuffer)
+        return false
       } else if (next === ']') {
         if (nameBuffer.length === 0) {
           // Currently we have "[]", position is at the "]".
@@ -171,6 +175,9 @@ export class Lexer {
 
       nameBuffer.push(next)
     }
+
+    this._appendText(nameBuffer)
+    return false
   }
 
   /**

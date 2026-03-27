@@ -10,7 +10,7 @@ export class ListTag extends BBCodeTagBase {
       return []
     }
 
-    return [DiagErr.invalidAttributeValue(attr)]
+    return [DiagErr.invalidAttributeValue(attr, ['1'])]
   }
 }
 

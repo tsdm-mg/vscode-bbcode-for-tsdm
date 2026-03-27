@@ -43,4 +43,27 @@ export const i18nEn: Translations = {
     underline: { description: 'Underline' },
     userMention: { description: '@Someone' },
   },
+  diagnostic: {
+    unknownTag: function (name: string): string {
+      return `Unknown tag "${name}"`
+    },
+    attributeNotAllowed: 'tag does not allow to have attribute',
+    attributeRequired: 'tag must use with attribute',
+    invalidAttributeValue: function (
+      attr?: string,
+      allowedAttr?: string,
+    ): string {
+      return (
+        (attr === undefined
+          ? 'invalid attribute value'
+          : `invalid attribute value "${attr}"`) +
+        (allowedAttr === undefined
+          ? ''
+          : `. allowed attributes: ${allowedAttr}`)
+      )
+    },
+    invalidColor: function (attr?: string): string {
+      return `invalid color${attr === undefined ? '' : ` ${attr}`}`
+    },
+  },
 }

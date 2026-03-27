@@ -7,6 +7,13 @@ export function setupI18n(locale: string | undefined): Translations {
 
 export interface Translations {
   tags: I18nTags
+  diagnostic: {
+    unknownTag: (name: string) => string
+    attributeNotAllowed: string
+    attributeRequired: string
+    invalidAttributeValue: (attr?: string, allowedAttr?: string) => string
+    invalidColor: (attr?: string) => string
+  }
 }
 
 export interface I18nTags {

@@ -11,7 +11,7 @@ export class AlignTag extends BBCodeTagBase {
       return [DiagErr.attributeRequired()]
     }
 
-    if (AlignTag.alignments.includes(attr)) {
+    if (!AlignTag.alignments.includes(attr)) {
       return [DiagErr.invalidAttributeValue(attr, AlignTag.alignments)]
     }
 

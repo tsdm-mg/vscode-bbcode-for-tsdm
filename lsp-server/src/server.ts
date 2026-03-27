@@ -15,12 +15,60 @@ import {
 } from 'vscode-languageserver/node'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { autoComplete } from './auto-complete'
-import { DiagnosticError } from './diagnostic-result'
 import { setupI18n, Translations } from './i18n/i18n'
 import { Lexer } from './lexer'
 import { Parser } from './parser'
 import { allTags } from './tags'
-import { BBCodeComponent, dumpDiagnosticError } from './tags/tag'
+import { BBCodeComponent, diagnoseBBCodeAST } from './tags/tag'
+import {
+  DiagnosticError,
+  DiagnosticSeverity as BBCodeDiagnosticSeverity,
+} from './diagnostic-result'
+
+function _buildDiagnosticMessage(
+  error: DiagnosticError,
+  i18n: Translations,
+): string {
+  const d = i18n.diagnostic
+
+  switch (error._kind) {
+    case 'DiagErrUnknownTag':
+      return d.unknownTag(error.name)
+
+    case 'DiagErrAttributeNotAllowed':
+      return d.attributeNotAllowed
+
+    case 'DiagErrAttributeRequired':
+      return d.attributeRequired
+
+    case 'DiagErrInvalidAttributeValue':
+      return d.invalidAttributeValue(error.attr, error.allowedAttr?.join(', '))
+
+    case 'DiagErrInvalidColor':
+      return d.invalidColor(error.attr)
+
+    default:
+      throw new Error('unsupported error kind')
+  }
+}
+
+function _buildSeverity(
+  bbcodeSeverity: BBCodeDiagnosticSeverity,
+): DiagnosticSeverity {
+  switch (bbcodeSeverity) {
+    case 'info':
+      return DiagnosticSeverity.Information
+
+    case 'error':
+      return DiagnosticSeverity.Error
+
+    case 'warning':
+      return DiagnosticSeverity.Warning
+
+    default:
+      throw new Error('unsupported bbcode severity kind')
+  }
+}
 
 function _loadData(text: TextDocument): BBCodeComponent[] {
   const lexer = new Lexer(text.getText())
@@ -32,7 +80,13 @@ function _loadData(text: TextDocument): BBCodeComponent[] {
 
 function _dumpDiagnosticErrors(text: TextDocument): Diagnostic[] {
   const ast = _loadData(text)
-  const bbcodeErrors = dumpDiagnosticError(ast)
+  return diagnoseBBCodeAST(ast).map((e) =>
+    Diagnostic.create(
+      { start: text.positionAt(e.start), end: text.positionAt(e.end) },
+      _buildDiagnosticMessage(e.error, _i18n),
+      _buildSeverity(e.error.severity),
+    ),
+  )
 }
 
 // Create a connection for the server, using Node's IPC as a transport.
@@ -167,52 +221,13 @@ documents.onDidChangeContent((change) => {
 async function validateTextDocument(
   textDocument: TextDocument,
 ): Promise<Diagnostic[]> {
-  // In this simple example we get the settings for every validate run.
   const settings = await getDocumentSettings(textDocument.uri)
-
-  // The validator creates diagnostics for all uppercase words length 2 and more
-  const text = textDocument.getText()
-
-  let problems = 0
-  const diagnostics: Diagnostic[] = []
-  while ((m = pattern.exec(text)) && problems < settings.maxNumberOfProblems) {
-    //
-
-    // ----
-
-    //
-
-    problems++
-    const diagnostic: Diagnostic = {
-      severity: DiagnosticSeverity.Warning,
-      range: {
-        start: textDocument.positionAt(m.index),
-        end: textDocument.positionAt(m.index + m[0].length),
-      },
-      message: `${m[0]} is all uppercase.`,
-      source: 'ex',
-    }
-    if (hasDiagnosticRelatedInformationCapability) {
-      diagnostic.relatedInformation = [
-        {
-          location: {
-            uri: textDocument.uri,
-            range: Object.assign({}, diagnostic.range),
-          },
-          message: 'Spelling matters',
-        },
-        {
-          location: {
-            uri: textDocument.uri,
-            range: Object.assign({}, diagnostic.range),
-          },
-          message: 'Particularly for names',
-        },
-      ]
-    }
-    diagnostics.push(diagnostic)
-  }
-  return diagnostics
+  return _dumpDiagnosticErrors(textDocument).slice(
+    0,
+    // TODO: Use settings.maxNumberOfProblems
+    100,
+    // settings.maxNumberOfProblems,
+  )
 }
 
 _conn.onDidChangeWatchedFiles((_change) => {

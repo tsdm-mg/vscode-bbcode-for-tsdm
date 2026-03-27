@@ -15,8 +15,25 @@ import {
 } from 'vscode-languageserver/node'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { autoComplete } from './auto-complete'
+import { DiagnosticError } from './diagnostic-result'
 import { setupI18n, Translations } from './i18n/i18n'
+import { Lexer } from './lexer'
+import { Parser } from './parser'
 import { allTags } from './tags'
+import { BBCodeComponent, dumpDiagnosticError } from './tags/tag'
+
+function _loadData(text: TextDocument): BBCodeComponent[] {
+  const lexer = new Lexer(text.getText())
+  lexer.scanAll()
+  const parser = new Parser(lexer.tokens())
+  parser.parse()
+  return parser.ast()
+}
+
+function _dumpDiagnosticErrors(text: TextDocument): Diagnostic[] {
+  const ast = _loadData(text)
+  const bbcodeErrors = dumpDiagnosticError(ast)
+}
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -155,12 +172,16 @@ async function validateTextDocument(
 
   // The validator creates diagnostics for all uppercase words length 2 and more
   const text = textDocument.getText()
-  const pattern = /\b[A-Z]{2,}\b/g
-  let m: RegExpExecArray | null
 
   let problems = 0
   const diagnostics: Diagnostic[] = []
   while ((m = pattern.exec(text)) && problems < settings.maxNumberOfProblems) {
+    //
+
+    // ----
+
+    //
+
     problems++
     const diagnostic: Diagnostic = {
       severity: DiagnosticSeverity.Warning,

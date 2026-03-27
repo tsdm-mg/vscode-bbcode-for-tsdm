@@ -1,8 +1,9 @@
+import { DiagnosticError } from '../diagnostic-result'
 import { TagHead, TagTail } from '../token'
 
-export type BBCodeTag = BBCodeTagTag | BBCodeTagText
+export type BBCodeComponent = BBCodeTag | BBCodeText
 
-class BBCodeTagText {
+export class BBCodeText {
   constructor(start: number, end: number, data: string) {
     this._data = data
     this.start = start
@@ -29,7 +30,7 @@ class BBCodeTagText {
   }
 }
 
-interface BBCodeTagTag {
+export interface BBCodeTag {
   /**
    * Tag name.
    */
@@ -69,7 +70,7 @@ interface BBCodeTagTag {
    * The function accepts a string as raw attribute value to validate and
    * returns true if the value is valid.
    */
-  attributeValidator?(attr: string | undefined): boolean
+  attributeValidator?(attr: string | undefined): DiagnosticError[]
 
   /**
    * Optional attribute value.
@@ -84,7 +85,7 @@ interface BBCodeTagTag {
    * The function accepts a list of tags as children to validate and
    * returns true if tags are all valid to be the children of current tag.
    */
-  childrenValidator?(children: BBCodeTag[]): boolean
+  childrenValidator?(children: BBCodeComponent[]): DiagnosticError[]
 
   /**
    * An optional function to validate parent tag.
@@ -95,12 +96,12 @@ interface BBCodeTagTag {
    * If a tag should only exists when some tags are its direct parent node,
    * use this function to validate it.
    */
-  parentValidator?(parent: BBCodeTag): boolean
+  parentValidator?(parent: BBCodeComponent): DiagnosticError[]
 
   /**
    * All direct children tags.
    */
-  children: BBCodeTag[]
+  children: BBCodeComponent[]
 
   /**
    * Convert current tag into BBCode text.
@@ -127,12 +128,17 @@ interface BBCodeTagTag {
  *
  * Using attribute.
  */
-export abstract class BBCodeTagTagBase implements BBCodeTagTag {
-  constructor(head: TagHead, tail?: TagTail, children?: BBCodeTag[]) {
-    this.start = head.position.start
-    this.end = tail?.position.end ?? head.position.end
-    this.attribute = head.attribute
+export abstract class BBCodeTagBase implements BBCodeTag {
+  constructor(token: TagHead | TagTail, children?: BBCodeComponent[]) {
+    this.start = token.position.start
+    this.end = token.position.end
+    this.attribute = undefined
+    if (token instanceof TagHead && token.attribute !== undefined) {
+      this.attribute = token.attribute
+    }
     this.children = children ?? []
+    this.isClosed = false
+    this.isHead = token instanceof TagHead
   }
 
   abstract name: string
@@ -142,10 +148,27 @@ export abstract class BBCodeTagTagBase implements BBCodeTagTag {
   start: number
   end: number
   selfClosed = false
-  children: BBCodeTag[]
-  attributeValidator?(attr: string | undefined): boolean
-  childrenValidator?(children: BBCodeTag[]): boolean
-  parentValidator?(parent: BBCodeTag): boolean
+  children: BBCodeComponent[]
+  attributeValidator?(attr: string | undefined): DiagnosticError[]
+  childrenValidator?(children: BBCodeComponent[]): DiagnosticError[]
+  parentValidator?(parent: BBCodeComponent): DiagnosticError[]
+
+  /**
+   * Flag indicating is tag head or not.
+   *
+   * If false, then built from tag tail.
+   */
+  isHead: boolean
+
+  /**
+   * Flag indicating a tag is closed or not.
+   */
+  isClosed: boolean
+
+  closeTag(tagTail: TagTail) {
+    this.end = tagTail.position.end
+    this.isClosed = true
+  }
 
   toBBCode(): string {
     if (this.selfClosed) {
@@ -185,4 +208,46 @@ export abstract class BBCodeTagTagBase implements BBCodeTagTag {
   attributeBBCode(): string {
     return this.attribute === undefined ? '' : `=${this.attribute}`
   }
+
+  /**
+   * Find the tag satisfy some condition `pred`.
+   *
+   * @param pred The predication on tag, should return true if the input `tag`
+   *   satisfy it.
+   * @returns The tag if found or undefined if not found.
+   */
+  findTag(
+    pred: (tag: BBCodeComponent) => boolean,
+  ): BBCodeComponent | undefined {
+    for (const child of this.children) {
+      if (pred(child)) {
+        return child
+      }
+
+      if (child instanceof BBCodeTagBase) {
+        const childTarget = child.findTag(pred)
+        if (childTarget !== undefined) {
+          return childTarget
+        }
+      }
+    }
+  }
+}
+
+export function dumpDiagnosticError(
+  bbcode: BBCodeComponent[],
+): DiagnosticError[] {
+  const errors: DiagnosticError[] = []
+
+  for (const node of bbcode) {
+    if (node instanceof BBCodeText) {
+      continue
+    }
+
+    if (node.attributeValidator !== undefined) {
+      errors.push(...node.attributeValidator(node.attribute))
+    }
+  }
+
+  return errors
 }

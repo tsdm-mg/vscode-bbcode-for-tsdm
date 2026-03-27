@@ -1,3 +1,5 @@
+import { DiagErr, DiagnosticError } from '../diagnostic-result'
+
 const colorNames = new Set([
   'aliceblue',
   'antiquewhite',
@@ -149,16 +151,16 @@ const colorNames = new Set([
   'yellowgreen',
 ])
 
-export function colorValidator(value: string): boolean {
+export function colorValidator(value: string): DiagnosticError[] {
   const colorRe = /^(#)?[0-9a-fA-F]{1,6}$/
   const colorMatch = colorRe.exec(value)
   if (colorMatch !== null) {
-    return true
+    return []
   }
 
   if (colorNames.has(value)) {
-    return true
+    return []
   }
 
-  return false
+  return [DiagErr.invalidColor()]
 }

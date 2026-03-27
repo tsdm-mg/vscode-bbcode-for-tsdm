@@ -1,9 +1,23 @@
-import { BBCodeTagTagBase } from './tag'
+import { BBCodeTagBase } from './tag'
+import { DiagErr, DiagnosticError } from '../diagnostic-result'
+import { nullValidator } from '../validators/null-validator'
 
-export class ListTag extends BBCodeTagTagBase {
+export class ListTag extends BBCodeTagBase {
   readonly name = 'list'
 
-  attributeValidator(attr: string | undefined): boolean {
-    return attr === undefined || attr === '1'
+  attributeValidator(attr: string | undefined): DiagnosticError[] {
+    if (attr === undefined || attr === '1') {
+      return []
+    }
+
+    return [DiagErr.invalidAttributeValue(attr)]
   }
+}
+
+export class ListItemTag extends BBCodeTagBase {
+  readonly name = '*'
+
+  selfClosed = true
+
+  attributeValidator = nullValidator
 }

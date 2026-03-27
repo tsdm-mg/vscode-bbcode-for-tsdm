@@ -5,3 +5,5 @@ node_modules
 *.vsix
 .env
 /dist
+
+/lsp-server/data/*.bbcode.txt

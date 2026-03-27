@@ -1,9 +1,14 @@
-import { BBCodeTagTagBase } from './tag'
+import { DiagErr, DiagnosticError } from '../diagnostic-result'
+import { BBCodeTagBase } from './tag'
 
-export class HideTag extends BBCodeTagTagBase {
+export class HideTag extends BBCodeTagBase {
   readonly name = 'hide'
 
-  attributeValidator(attr: string | undefined): boolean {
-    return attr === undefined || /^\d+$/.test(attr)
+  attributeValidator(attr: string | undefined): DiagnosticError[] {
+    if (attr === undefined || /^\d+$/.test(attr)) {
+      return []
+    }
+
+    return [DiagErr.invalidAttributeValue(attr)]
   }
 }

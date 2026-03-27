@@ -1,10 +1,8 @@
 import { BBCodeTagBase } from './tag'
 import { nullValidator } from '../validators/null-validator'
 
-export class DividerTag extends BBCodeTagBase {
-  readonly name = 'hr'
-
-  selfClosed = true
+export class QuoteTag extends BBCodeTagBase {
+  readonly name = 'quote'
 
   attributeValidator = nullValidator
 }

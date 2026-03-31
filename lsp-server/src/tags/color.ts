@@ -6,7 +6,7 @@ export class ColorTag extends BBCodeTagBase {
   readonly name = 'color'
 
   attributeValidator(attr: string | undefined): DiagnosticError[] {
-    if (attr === undefined) {
+    if (attr === undefined || attr.length === 0) {
       return [DiagErr.attributeRequired()]
     }
 

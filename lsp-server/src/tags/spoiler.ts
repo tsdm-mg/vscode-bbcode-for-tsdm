@@ -5,7 +5,7 @@ export class SpoilerTag extends BBCodeTagBase {
   readonly name = 'spoiler'
 
   attributeValidator(attr: string | undefined): DiagnosticError[] {
-    if (attr === undefined) {
+    if (attr === undefined || attr.length === 0) {
       return [DiagErr.attributeRequired()]
     }
 

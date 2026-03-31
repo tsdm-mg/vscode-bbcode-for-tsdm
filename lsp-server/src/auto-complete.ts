@@ -7,10 +7,23 @@ import {
 } from 'vscode-languageserver'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { allTags, Tag } from './tags'
+import { AlignTag } from './tags/align'
+import { FontSizeTag } from './tags/font-size'
+import { colorNames } from './validators/color-validator'
 
-const allCompletionItems: CompletionItem[] = allTags.flatMap((tag) =>
+const allTagCompletionItems: CompletionItem[] = allTags.flatMap((tag) =>
   tagToCompletionItem(tag),
 )
+
+const allColorCompletionItems = attrListToCompletionItems([...colorNames])
+const allSizeCompletionItems = attrListToCompletionItems(FontSizeTag.fontSizes)
+
+const allTagAttrCompletionItems = new Map<string, CompletionItem[]>([
+  ['align', attrListToCompletionItems(AlignTag.alignments)],
+  ['color', allColorCompletionItems],
+  ['backcolor', allColorCompletionItems],
+  ['size', allSizeCompletionItems],
+])
 
 function tagToCompletionItem(tag: Tag): CompletionItem[] {
   const items: CompletionItem[] = []
@@ -47,6 +60,16 @@ function tagToCompletionItem(tag: Tag): CompletionItem[] {
   return items
 }
 
+function attrListToCompletionItems(attrList: string[]): CompletionItem[] {
+  return attrList.map((attr) => ({
+    label: attr,
+    kind: CompletionItemKind.Enum,
+    detail: attr,
+    insertText: attr,
+    insertTextFormat: InsertTextFormat.PlainText,
+  }))
+}
+
 export function autoComplete(
   documents: TextDocuments<TextDocument>,
   params: TextDocumentPositionParams,
@@ -65,33 +88,67 @@ export function autoComplete(
   const prefix = inlineText
 
   if (prefix.endsWith('[')) {
-    return allCompletionItems
+    return allTagCompletionItems
   }
 
   // Compute partial completion tags.
   const lastOpenIndex = prefix.lastIndexOf('[')
-  if (lastOpenIndex !== -1) {
-    const partialTag = prefix.slice(lastOpenIndex + 1)
-    const matchingTags = allTags.filter((tag) =>
-      tag.label.startsWith(partialTag),
-    )
-    const matchingSnippets = allTags.flatMap(
-      (tag) =>
-        tag.snippets
-          ?.filter((s) => s.prefix.startsWith(partialTag))
-          .map((s) => ({
-            label: s.prefix,
-            kind: CompletionItemKind.Snippet,
-            detail: s.name,
-            insertTextFormat: InsertTextFormat.Snippet,
-            insertText: `[${s.body}`,
-          })) ?? [],
-    )
-    return [
-      ...matchingTags.flatMap((tag) => tagToCompletionItem(tag)), // 包含基础和属性
-      ...matchingSnippets,
-    ]
+  if (lastOpenIndex === -1) {
+    return []
   }
 
-  return []
+  const partialTag = prefix.slice(lastOpenIndex + 1)
+
+  const attrSplitIndex = partialTag.indexOf('=')
+  if (attrSplitIndex !== -1) {
+    // Auto complete tag attr.
+    const tagName = partialTag.slice(0, attrSplitIndex)
+    const attrValue =
+      attrSplitIndex >= partialTag.length - 1
+        ? ''
+        : partialTag.slice(attrSplitIndex + 1)
+    const attrCompletionItems = allTagAttrCompletionItems.get(tagName)
+    if (attrCompletionItems === undefined) {
+      return []
+    }
+
+    const range = {
+      start: { line: pos.line, character: pos.character - attrValue.length },
+      end: pos,
+    }
+
+    return attrCompletionItems
+      .filter((attr) => attr.label.startsWith(attrValue))
+      .map(
+        (attr): CompletionItem => ({
+          label: attr.label,
+          kind: attr.kind,
+          detail: attr.detail,
+          textEdit: {
+            range,
+            newText: attr.label,
+          },
+        }),
+      )
+  }
+
+  // Auto complete tag name.
+
+  const matchingTags = allTags.filter((tag) => tag.label.startsWith(partialTag))
+  const matchingSnippets = allTags.flatMap(
+    (tag) =>
+      tag.snippets
+        ?.filter((s) => s.prefix.startsWith(partialTag))
+        .map((s) => ({
+          label: s.prefix,
+          kind: CompletionItemKind.Snippet,
+          detail: s.name,
+          insertTextFormat: InsertTextFormat.Snippet,
+          insertText: `[${s.body}`,
+        })) ?? [],
+  )
+  return [
+    ...matchingTags.flatMap((tag) => tagToCompletionItem(tag)), // 包含基础和属性
+    ...matchingSnippets,
+  ]
 }

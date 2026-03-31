@@ -1,6 +1,6 @@
 import { DiagErr, DiagnosticError } from '../diagnostic-result'
 
-const colorNames = new Set([
+export const colorNames = new Set([
   'aliceblue',
   'antiquewhite',
   'aqua',

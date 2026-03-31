@@ -1,6 +1,5 @@
 import { Translations } from './i18n/i18n'
 import { Snippet } from './snippets'
-import { colorValidator } from './validators/color-validator'
 
 /**
  * Defines attribute rules for BBCode tags.
@@ -15,14 +14,6 @@ export interface Attribute {
    * Attribute snippet format.
    */
   snippet: string
-
-  /**
-   * Validate attributes format.
-   *
-   * @param attr Raw attribute value to check
-   * @returns if the `attr` is valid.
-   */
-  validator?: (attr: string) => boolean
 }
 
 export interface Tag {
@@ -69,7 +60,6 @@ export const allTags: Tag[] = [
     attribute: {
       required: false,
       snippet: '${1:mode}',
-      validator: (attr) => ['left', 'center', 'right'].includes(attr),
     },
     selfClosing: false,
     layout: 'block',
@@ -101,7 +91,6 @@ export const allTags: Tag[] = [
     attribute: {
       required: true,
       snippet: '${1:value}',
-      validator: colorValidator,
     },
     selfClosing: false,
     layout: 'inline',
@@ -127,7 +116,6 @@ export const allTags: Tag[] = [
     attribute: {
       required: true,
       snippet: '${1:value}',
-      validator: colorValidator,
     },
     selfClosing: false,
     layout: 'inline',
@@ -146,7 +134,6 @@ export const allTags: Tag[] = [
     attribute: {
       required: true,
       snippet: '${1:value}',
-      validator: (attr) => ['1', '2', '3', '4', '5', '6'].includes(attr),
     },
     selfClosing: false,
     layout: 'inline',
@@ -218,7 +205,6 @@ export const allTags: Tag[] = [
     attribute: {
       required: true,
       snippet: '${1:width},${2:height}',
-      validator: (attr) => /^\d+,\d+/.exec(attr) !== null,
     },
     selfClosing: false,
     layout: 'inline',
@@ -237,7 +223,6 @@ export const allTags: Tag[] = [
     attribute: {
       required: false,
       snippet: '1',
-      validator: (attr) => attr === '1',
     },
     selfClosing: false,
     layout: 'block',

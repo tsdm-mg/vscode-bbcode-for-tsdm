@@ -1,3 +1,4 @@
+import { DiagErr, DiagnosticError } from '../diagnostic-result'
 import { TagHead, TagTail } from '../token'
 import { BBCodeComponent, BBCodeTagBase } from './tag'
 
@@ -14,4 +15,9 @@ export class UnknownTag extends BBCodeTagBase {
   }
 
   readonly name: string
+
+  additionalValidator(): DiagnosticError[] {
+    // Always report an unknown tag error.
+    return [DiagErr.unknownTag(this.name)]
+  }
 }

@@ -45,21 +45,30 @@ export const i18nZh: Translations = {
   },
   diagnostic: {
     unknownTag: function (name: string): string {
-      return `未知tag "${name}"`
+      return `未知标签 ${name}`
     },
-    attributeNotAllowed: 'tag不允许拥有属性',
-    attributeRequired: 'tag必须填写属性',
+    attributeNotAllowed: '标签不允许拥有属性',
+    attributeRequired: '标签必须填写属性',
     invalidAttributeValue: function (
       attr?: string,
       allowedAttr?: string,
     ): string {
       return (
-        (attr === undefined ? '无效的属性' : `无效的属性值 "${attr}"`) +
+        (attr === undefined ? '无效的属性' : `无效的属性值 ${attr}`) +
         (allowedAttr === undefined ? '' : `。 合法的属性值：${allowedAttr}`)
       )
     },
     invalidColor: function (attr?: string): string {
-      return `无效的颜色${attr === undefined ? '' : ` "${attr}"`}`
+      return `无效的颜色${attr === undefined ? '' : ` ${attr}`}`
+    },
+    invalidImageSize: function (attr?: string): string {
+      return `无效的图片大小${attr === undefined ? '' : ` ${attr}`}。应使用 width,height 例如100,200`
+    },
+    tagNotClosed: function (name: string): string {
+      return `标签 ${name} 缺少对应的结束标签`
+    },
+    tagNotOpened: function (name: string): string {
+      return `标签 ${name} 缺少对应的开始标签`
     },
   },
 }

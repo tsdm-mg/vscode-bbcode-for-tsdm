@@ -18,7 +18,7 @@ export class ImageTag extends BBCodeTagBase {
     }
 
     if (!/^\d+,\d+$/.test(attr)) {
-      return [DiagErr.invalidAttributeValue(attr)]
+      return [DiagErr.invalidImageSize(attr)]
     }
 
     return []

@@ -56,7 +56,7 @@ export const i18nEn: Translations = {
       return (
         (attr === undefined
           ? 'invalid attribute value'
-          : `invalid attribute value "${attr}"`) +
+          : `invalid attribute value ${attr}`) +
         (allowedAttr === undefined
           ? ''
           : `. allowed attributes: ${allowedAttr}`)
@@ -64,6 +64,15 @@ export const i18nEn: Translations = {
     },
     invalidColor: function (attr?: string): string {
       return `invalid color${attr === undefined ? '' : ` ${attr}`}`
+    },
+    invalidImageSize: function (attr?: string): string {
+      return `invalid image size${attr === undefined ? '' : ` ${attr}`}. Use width,height e.g. 100,200`
+    },
+    tagNotClosed: function (name: string): string {
+      return `tag ${name} not closed`
+    },
+    tagNotOpened: function (name: string): string {
+      return `tag ${name} not opened`
     },
   },
 }

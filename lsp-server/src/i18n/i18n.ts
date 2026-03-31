@@ -13,6 +13,9 @@ export interface Translations {
     attributeRequired: string
     invalidAttributeValue: (attr?: string, allowedAttr?: string) => string
     invalidColor: (attr?: string) => string
+    invalidImageSize: (attr?: string) => string
+    tagNotClosed: (name: string) => string
+    tagNotOpened: (name: string) => string
   }
 }
 

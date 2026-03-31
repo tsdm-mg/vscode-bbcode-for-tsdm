@@ -15,15 +15,15 @@ import {
 } from 'vscode-languageserver/node'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { autoComplete } from './auto-complete'
+import {
+  DiagnosticError,
+  DiagnosticSeverity as BBCodeDiagnosticSeverity,
+} from './diagnostic-result'
 import { setupI18n, Translations } from './i18n/i18n'
 import { Lexer } from './lexer'
 import { Parser } from './parser'
 import { allTags } from './tags'
 import { BBCodeComponent, diagnoseBBCodeAST } from './tags/tag'
-import {
-  DiagnosticError,
-  DiagnosticSeverity as BBCodeDiagnosticSeverity,
-} from './diagnostic-result'
 
 function _buildDiagnosticMessage(
   error: DiagnosticError,
@@ -32,23 +32,41 @@ function _buildDiagnosticMessage(
   const d = i18n.diagnostic
 
   switch (error._kind) {
-    case 'DiagErrUnknownTag':
+    case 'DiagErrUnknownTag': {
       return d.unknownTag(error.name)
+    }
 
-    case 'DiagErrAttributeNotAllowed':
+    case 'DiagErrAttributeNotAllowed': {
       return d.attributeNotAllowed
+    }
 
-    case 'DiagErrAttributeRequired':
+    case 'DiagErrAttributeRequired': {
       return d.attributeRequired
+    }
 
-    case 'DiagErrInvalidAttributeValue':
+    case 'DiagErrInvalidAttributeValue': {
       return d.invalidAttributeValue(error.attr, error.allowedAttr?.join(', '))
+    }
 
-    case 'DiagErrInvalidColor':
-      return d.invalidColor(error.attr)
+    case 'DiagErrInvalidColor': {
+      return d.invalidColor(error.color)
+    }
 
-    default:
+    case 'DiagErrInvalidImageSize': {
+      return d.invalidImageSize(error.size)
+    }
+
+    case 'DiagErrTagNotClosed': {
+      return d.tagNotClosed(error.name)
+    }
+
+    case 'DiagErrTagNotOpened': {
+      return d.tagNotOpened(error.name)
+    }
+
+    default: {
       throw new Error('unsupported error kind')
+    }
   }
 }
 
@@ -56,17 +74,21 @@ function _buildSeverity(
   bbcodeSeverity: BBCodeDiagnosticSeverity,
 ): DiagnosticSeverity {
   switch (bbcodeSeverity) {
-    case 'info':
+    case 'info': {
       return DiagnosticSeverity.Information
+    }
 
-    case 'error':
+    case 'error': {
       return DiagnosticSeverity.Error
+    }
 
-    case 'warning':
+    case 'warning': {
       return DiagnosticSeverity.Warning
+    }
 
-    default:
+    default: {
       throw new Error('unsupported bbcode severity kind')
+    }
   }
 }
 
@@ -85,6 +107,8 @@ function _dumpDiagnosticErrors(text: TextDocument): Diagnostic[] {
       { start: text.positionAt(e.start), end: text.positionAt(e.end) },
       _buildDiagnosticMessage(e.error, _i18n),
       _buildSeverity(e.error.severity),
+      e.error._kind,
+      'bbcode-tsdm',
     ),
   )
 }
@@ -101,7 +125,7 @@ const documents = new TextDocuments(TextDocument)
 
 let hasConfigurationCapability = false
 let hasWorkspaceFolderCapability = false
-let hasDiagnosticRelatedInformationCapability = false
+// let hasDiagnosticRelatedInformationCapability = false
 
 _conn.onInitialize((params: InitializeParams) => {
   // Setup i18n
@@ -116,8 +140,8 @@ _conn.onInitialize((params: InitializeParams) => {
   hasWorkspaceFolderCapability = !!(
     capabilities.workspace && !!capabilities.workspace.workspaceFolders
   )
-  hasDiagnosticRelatedInformationCapability =
-    !!capabilities.textDocument?.publishDiagnostics?.relatedInformation
+  // hasDiagnosticRelatedInformationCapability =
+  //   !!capabilities.textDocument?.publishDiagnostics?.relatedInformation
 
   const result: InitializeResult = {
     capabilities: {
@@ -156,18 +180,18 @@ _conn.onInitialized(() => {
 })
 
 // The example settings
-interface ExampleSettings {
+interface BBCodeLspSettings {
   maxNumberOfProblems: number
 }
 
 // The global settings, used when the `workspace/configuration` request is not supported by the client.
 // Please note that this is not the case when using this server with the client provided in this example
 // but could happen with other clients.
-const defaultSettings: ExampleSettings = { maxNumberOfProblems: 1000 }
-let globalSettings: ExampleSettings = defaultSettings
+const defaultSettings: BBCodeLspSettings = { maxNumberOfProblems: 1000 }
+let globalSettings: BBCodeLspSettings = defaultSettings
 
 // Cache the settings of all open documents
-const documentSettings = new Map<string, Thenable<ExampleSettings>>()
+const documentSettings = new Map<string, Thenable<BBCodeLspSettings>>()
 
 _conn.onDidChangeConfiguration((change) => {
   if (hasConfigurationCapability) {
@@ -183,16 +207,28 @@ _conn.onDidChangeConfiguration((change) => {
   _conn.languages.diagnostics.refresh()
 })
 
-function getDocumentSettings(resource: string): Thenable<ExampleSettings> {
+function getDocumentSettings(resource: string): Thenable<BBCodeLspSettings> {
   if (!hasConfigurationCapability) {
     return Promise.resolve(globalSettings)
   }
   let result = documentSettings.get(resource)
   if (!result) {
-    result = _conn.workspace.getConfiguration({
-      scopeUri: resource,
-      section: 'languageServerExample',
-    })
+    result = _conn.workspace
+      .getConfiguration({
+        scopeUri: resource,
+        section: 'languageServerExample',
+      })
+      .then((settings) => {
+        if (
+          !settings ||
+          typeof settings !== 'object' ||
+          Object.keys(settings as object).length === 0
+        ) {
+          return { ...defaultSettings, ...settings } as BBCodeLspSettings
+        }
+
+        return settings as BBCodeLspSettings
+      })
     documentSettings.set(resource, result)
   }
   return result
@@ -224,9 +260,7 @@ async function validateTextDocument(
   const settings = await getDocumentSettings(textDocument.uri)
   return _dumpDiagnosticErrors(textDocument).slice(
     0,
-    // TODO: Use settings.maxNumberOfProblems
-    100,
-    // settings.maxNumberOfProblems,
+    settings.maxNumberOfProblems,
   )
 }
 

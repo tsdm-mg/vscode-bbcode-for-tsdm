@@ -162,5 +162,5 @@ export function colorValidator(value: string): DiagnosticError[] {
     return []
   }
 
-  return [DiagErr.invalidColor()]
+  return [DiagErr.invalidColor(value)]
 }

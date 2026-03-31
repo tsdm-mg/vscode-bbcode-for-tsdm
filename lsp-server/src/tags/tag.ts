@@ -1,4 +1,8 @@
-import { DiagnosticError, DiagnosticMessage } from '../diagnostic-result'
+import {
+  DiagErr,
+  DiagnosticError,
+  DiagnosticMessage,
+} from '../diagnostic-result'
 import { TagHead, TagTail } from '../token'
 
 export type BBCodeComponent = BBCodeTag | BBCodeText
@@ -99,6 +103,14 @@ export interface BBCodeTag {
   parentValidator?(parent: BBCodeComponent): DiagnosticError[]
 
   /**
+   * An optional function to the node if self.
+   *
+   * The function accepts no argument as this field is here for tag-wide
+   * specific usage.
+   */
+  additionalValidator?(): DiagnosticError[]
+
+  /**
    * All direct children tags.
    */
   children: BBCodeComponent[]
@@ -152,6 +164,7 @@ export abstract class BBCodeTagBase implements BBCodeTag {
   attributeValidator?(attr: string | undefined): DiagnosticError[]
   childrenValidator?(children: BBCodeComponent[]): DiagnosticError[]
   parentValidator?(parent: BBCodeComponent): DiagnosticError[]
+  additionalValidator?(): DiagnosticError[]
 
   /**
    * Flag indicating is tag head or not.
@@ -236,21 +249,43 @@ export abstract class BBCodeTagBase implements BBCodeTag {
   diagnose(): DiagnosticMessage[] {
     const messages: DiagnosticMessage[] = []
 
-    if (this.attribute !== undefined && this.attributeValidator !== undefined) {
+    if (this.additionalValidator !== undefined) {
+      messages.push(
+        ...this.additionalValidator().map((e) =>
+          this.makeTagNameDiagnosticMessage(e),
+        ),
+      )
+    }
+
+    if (!this.isClosed && !this.selfClosed) {
+      messages.push(
+        this.makeTagHeadDiagnosticMessage(
+          this.isHead
+            ? DiagErr.tagNotClosed(this.name)
+            : DiagErr.tagNotOpened(this.name),
+        ),
+      )
+    }
+
+    if (this.attributeValidator !== undefined) {
       messages.push(
         ...this.attributeValidator(this.attribute).map((e) =>
-          this.makeAttributeDiagnosticMessage(e),
+          this.attribute === undefined
+            ? this.makeTagNameDiagnosticMessage(e)
+            : this.makeAttributeDiagnosticMessage(e),
         ),
       )
     }
 
     for (const child of this.children) {
       if (child instanceof BBCodeText) {
+        // Do nothing.
+        continue
       } else if (child instanceof BBCodeTagBase) {
         messages.push(...child.diagnose())
       } else {
         // Unreachable.
-        throw Error('unsupported bbcode component ty')
+        throw new TypeError('unsupported bbcode component ty')
       }
     }
 
@@ -258,6 +293,7 @@ export abstract class BBCodeTagBase implements BBCodeTag {
   }
 
   private tagHeaderRange(): { start: number; end: number } {
+    // eslint-disable-next-line unicorn/prefer-ternary
     if (this.isHead) {
       // Add 1 offset to skip '[' before tag name.
       return {
@@ -277,6 +313,7 @@ export abstract class BBCodeTagBase implements BBCodeTag {
    * Get the range of tag name in head (or tail).
    */
   private tagNameRange(): { start: number; end: number } {
+    // eslint-disable-next-line unicorn/prefer-ternary
     if (this.isHead) {
       // Add 1 offset to skip '[' before tag name.
       return {
@@ -300,6 +337,7 @@ export abstract class BBCodeTagBase implements BBCodeTag {
   private attrRange(): { start: number; end: number } {
     return {
       start: this.start + 1 + this.name.length + 1,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       end: this.start + 1 + this.name.length + 1 + this.attribute!.length,
     }
   }

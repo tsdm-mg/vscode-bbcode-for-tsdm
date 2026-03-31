@@ -1,5 +1,4 @@
 import { DiagErr, DiagnosticError } from '../diagnostic-result'
-import { BBCodeTagBase } from '../tags/tag'
 
 /**
  * Ensure that attribute does not exist.

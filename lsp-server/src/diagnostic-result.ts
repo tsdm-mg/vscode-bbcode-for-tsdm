@@ -38,6 +38,9 @@ export type DiagnosticError =
   | DiagErrAttributeRequired
   | DiagErrInvalidAttributeValue
   | DiagErrInvalidColor
+  | DiagErrInvalidImageSize
+  | DiagErrTagNotClosed
+  | DiagErrTagNotOpened
 
 export const DiagErr = {
   unknownTag: (name: string): DiagErrUnknownTag => ({
@@ -66,9 +69,28 @@ export const DiagErr = {
     allowedAttr,
   }),
 
-  invalidColor: (): DiagErrInvalidColor => ({
+  invalidColor: (color: string): DiagErrInvalidColor => ({
     _kind: 'DiagErrInvalidColor',
     severity: 'error',
+    color,
+  }),
+
+  invalidImageSize: (size: string): DiagErrInvalidImageSize => ({
+    _kind: 'DiagErrInvalidImageSize',
+    severity: 'error',
+    size,
+  }),
+
+  tagNotClosed: (name: string): DiagErrTagNotClosed => ({
+    _kind: 'DiagErrTagNotClosed',
+    severity: 'error',
+    name,
+  }),
+
+  tagNotOpened: (name: string): DiagErrTagNotOpened => ({
+    _kind: 'DiagErrTagNotOpened',
+    severity: 'error',
+    name,
   }),
 }
 
@@ -131,5 +153,55 @@ export interface DiagErrInvalidColor {
   /**
    * Current invalid color value.
    */
-  attr?: string
+  color: string
+}
+
+/**
+ * Invalid image size format.
+ */
+export interface DiagErrInvalidImageSize {
+  _kind: 'DiagErrInvalidImageSize'
+
+  severity: 'error'
+
+  /**
+   * Current invalid image size value.
+   */
+  size: string
+}
+
+/**
+ * Current tag does not have a corresponding opening tag head.
+ *
+ * This error does not occurs on self-closing tags.
+ *
+ * This error only occurs on tag tails.
+ */
+export interface DiagErrTagNotOpened {
+  _kind: 'DiagErrTagNotOpened'
+
+  severity: 'error'
+
+  /**
+   * Name of the tag.
+   */
+  name: string
+}
+
+/**
+ * Current tag not closed.
+ *
+ * This error does not occurs on self-closing tags.
+ *
+ * This error only occurs on tag tails.
+ */
+export interface DiagErrTagNotClosed {
+  _kind: 'DiagErrTagNotClosed'
+
+  severity: 'error'
+
+  /**
+   * Name of the tag.
+   */
+  name: string
 }

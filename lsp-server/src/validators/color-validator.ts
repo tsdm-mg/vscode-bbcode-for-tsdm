@@ -158,7 +158,7 @@ export function colorValidator(value: string): DiagnosticError[] {
     return []
   }
 
-  if (colorNames.has(value)) {
+  if (colorNames.has(value.toLowerCase())) {
     return []
   }
 

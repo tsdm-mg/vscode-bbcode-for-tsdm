@@ -317,6 +317,21 @@ export const allTags: Tag[] = [
     description: (tr) => tr.tags.underline.description,
   },
   {
+    name: 'url',
+    label: 'url',
+    selfClosing: false,
+    layout: 'inline',
+    description: (tr) => tr.tags.url.normal.description,
+    snippets: [
+      {
+        name: 'urlAttred',
+        prefix: 'urlattred',
+        body: 'url=$1]$0[/url]',
+        description: (tr) => tr.tags.url.withAttr.description,
+      },
+    ],
+  },
+  {
     name: 'userMention',
     label: '@',
     selfClosing: false,

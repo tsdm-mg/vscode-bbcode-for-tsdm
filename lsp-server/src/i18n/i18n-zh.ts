@@ -41,6 +41,10 @@ export const i18nZh: Translations = {
     tableRow: { description: '表格行' },
     tableData: { description: '表格单元格' },
     underline: { description: '下划线' },
+    url: {
+      normal: { description: '链接' },
+      withAttr: { description: '链接带属性' },
+    },
     userMention: { description: '艾特用户' },
   },
   diagnostic: {

@@ -59,6 +59,10 @@ export interface I18nTags {
   tableRow: I18nTag
   tableData: I18nTag
   underline: I18nTag
+  url: {
+    normal: I18nTag
+    withAttr: I18nTag
+  }
   userMention: I18nTag
 }
 

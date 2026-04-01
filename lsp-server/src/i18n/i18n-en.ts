@@ -41,6 +41,10 @@ export const i18nEn: Translations = {
     tableRow: { description: 'Table Row' },
     tableData: { description: 'Table Cell' },
     underline: { description: 'Underline' },
+    url: {
+      normal: { description: 'Url' },
+      withAttr: { description: 'Url With Attr' },
+    },
     userMention: { description: '@Someone' },
   },
   diagnostic: {

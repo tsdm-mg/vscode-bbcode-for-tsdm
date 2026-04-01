@@ -4,6 +4,8 @@ import { BBCodeTagBase } from './tag'
 export class ImageTag extends BBCodeTagBase {
   readonly name = 'img'
 
+  private static readonly imageSizeRegex = /^(?<width>\d+),(?<height>\d+)$/
+
   attributeValidator(attr: string | undefined): DiagnosticError[] {
     // The attribute value of an `img` tag is the image's display size.
     // It is not encouraged to use `img` tag without sizes.
@@ -17,7 +19,17 @@ export class ImageTag extends BBCodeTagBase {
       return [DiagErr.attributeRequired()]
     }
 
-    if (!/^\d+,\d+$/.test(attr)) {
+    const match = ImageTag.imageSizeRegex.exec(attr)
+
+    if (match?.groups === undefined) {
+      return [DiagErr.invalidImageSize(attr)]
+    }
+
+    const { width, height } = match.groups
+    const w = Number.parseInt(width)
+    const h = Number.parseInt(height)
+
+    if (w < 0 || h < 0 || (w === 0 && h === 0)) {
       return [DiagErr.invalidImageSize(attr)]
     }
 

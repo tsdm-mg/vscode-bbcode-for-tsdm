@@ -52,6 +52,8 @@ const allTagsBuilders = new Map<string, TagConstructor>([
   ['@', UserMention],
 ])
 
+export const allSelfClosingTagNames = ['hr']
+
 export function createBaseTag(token: TagHead | TagTail): BBCodeTagBase {
   const builder = allTagsBuilders.get(token.name) ?? UnknownTag
   return new builder(token)

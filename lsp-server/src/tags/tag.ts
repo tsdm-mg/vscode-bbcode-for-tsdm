@@ -3,6 +3,7 @@ import {
   DiagnosticError,
   DiagnosticMessage,
 } from '../diagnostic-result'
+import { DocRange } from '../range'
 import { TagHead, TagTail } from '../token'
 
 export type BBCodeComponent = BBCodeTag | BBCodeText
@@ -136,7 +137,7 @@ export interface BBCodeTag {
 }
 
 /**
- * The base class for all tags.
+ * The base class for all BBCode tags.
  *
  * Using attribute.
  */
@@ -292,7 +293,12 @@ export abstract class BBCodeTagBase implements BBCodeTag {
     return messages
   }
 
-  private tagHeaderRange(): { start: number; end: number } {
+  /**
+   * Get the range of tag head (or tail).
+   *
+   * For `[foo]`, returns the range for `[foo]`.
+   */
+  tagHeadRange(): DocRange {
     // eslint-disable-next-line unicorn/prefer-ternary
     if (this.isHead) {
       // Add 1 offset to skip '[' before tag name.
@@ -310,9 +316,73 @@ export abstract class BBCodeTagBase implements BBCodeTag {
   }
 
   /**
-   * Get the range of tag name in head (or tail).
+   * Get the tag tail offset range in the document.
+   *
+   * Returns the range of tag tail, or `undefined` if no logical tag tail available.
+   *
+   * - For regualr tags, return the range of `[/foo]` if it is closed.
+   *   - If tag is not closed, return `undefined`.
+   * - For self closing tags, always return the range of `[foo]`.
    */
-  private tagNameRange(): { start: number; end: number } {
+  tagTailRange(): DocRange | undefined {
+    if (this.selfClosed) {
+      // [hr]
+      return {
+        // Skip 1 offset for ']' and 1 offset for '['
+        start: this.end - 1 - this.name.length - 1,
+        end: this.end,
+      }
+    }
+
+    if (!this.isClosed) {
+      return undefined
+    }
+
+    // [color]foo[/color]
+    // Skip 1 offset for ']' and 2 offset for '[/'
+    return {
+      start: this.end - 1 - this.name.length - 2,
+      end: this.end,
+    }
+  }
+
+  /**
+   * Get the tag tail name offset range in the document.
+   *
+   * Returns the range of name in tag tail, or `undefined` if no logical tag tail available.
+   *
+   * - For regualr tags `[/foo]`, return the range of `foo` if it is closed.
+   *   - If tag is not closed, return `undefined`.
+   * - For self closing tags like `[foo]`, always return the range of `foo`.
+   */
+  tagTailNameRange(): DocRange | undefined {
+    if (this.selfClosed) {
+      // [hr]
+      // Skip 1 offset for ']'
+      return {
+        start: this.end - 1 - this.name.length,
+        end: this.end - 1,
+      }
+    }
+
+    if (!this.isClosed) {
+      return undefined
+    }
+
+    // [color]foo[/color]
+    // Skip 1 offset for ']'
+    return {
+      start: this.end - 1 - this.name.length,
+      end: this.end - 1,
+    }
+  }
+
+  /**
+   * Get the range of tag name in head (or tail).
+   *
+   * For `[foo]`, returns the range for `foo`.
+   */
+  tagHeadNameRange(): DocRange {
     // eslint-disable-next-line unicorn/prefer-ternary
     if (this.isHead) {
       // Add 1 offset to skip '[' before tag name.
@@ -334,7 +404,7 @@ export abstract class BBCodeTagBase implements BBCodeTag {
    *
    * That caller MUST ensure attribute is not undefined.
    */
-  private attrRange(): { start: number; end: number } {
+  private attrRange(): DocRange {
     return {
       start: this.start + 1 + this.name.length + 1,
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -350,7 +420,7 @@ export abstract class BBCodeTagBase implements BBCodeTag {
   private makeTagHeadDiagnosticMessage(
     error: DiagnosticError,
   ): DiagnosticMessage {
-    const { start, end } = this.tagHeaderRange()
+    const { start, end } = this.tagHeadRange()
     return {
       start,
       end,
@@ -366,7 +436,7 @@ export abstract class BBCodeTagBase implements BBCodeTag {
   private makeTagNameDiagnosticMessage(
     error: DiagnosticError,
   ): DiagnosticMessage {
-    const { start, end } = this.tagNameRange()
+    const { start, end } = this.tagHeadNameRange()
     return {
       start,
       end,
@@ -390,6 +460,23 @@ export abstract class BBCodeTagBase implements BBCodeTag {
       end,
       error,
     }
+  }
+}
+
+/**
+ * The base class for all self-closing tags.
+ *
+ * A self-closing tag closes without tag tail, e.g. the horizontal divider `[hr]`.
+ *
+ * This class automatically handles self closing flag and closes the tag with building
+ * with tag head, so that concrete tags do not have to do it themselves.
+ */
+export abstract class BBCodeTagSelfClosed extends BBCodeTagBase {
+  constructor(token: TagHead | TagTail, children?: BBCodeComponent[]) {
+    super(token, children)
+
+    this.selfClosed = true
+    this.isClosed = true
   }
 }
 

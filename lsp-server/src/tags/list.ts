@@ -1,4 +1,4 @@
-import { BBCodeTagBase } from './tag'
+import { BBCodeTagBase, BBCodeTagSelfClosed } from './tag'
 import { DiagErr, DiagnosticError } from '../diagnostic-result'
 import { nullValidator } from '../validators/null-validator'
 
@@ -14,10 +14,8 @@ export class ListTag extends BBCodeTagBase {
   }
 }
 
-export class ListItemTag extends BBCodeTagBase {
+export class ListItemTag extends BBCodeTagSelfClosed {
   readonly name = '*'
-
-  selfClosed = true
 
   attributeValidator = nullValidator
 }

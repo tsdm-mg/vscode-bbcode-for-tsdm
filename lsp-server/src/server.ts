@@ -12,18 +12,20 @@ import {
   InitializeResult,
   DocumentDiagnosticReportKind,
   type DocumentDiagnosticReport,
+  CodeActionTriggerKind,
 } from 'vscode-languageserver/node'
 import { TextDocument } from 'vscode-languageserver-textdocument'
+import { parseAST } from './ast'
 import { autoComplete } from './auto-complete'
 import {
   DiagnosticError,
   DiagnosticSeverity as BBCodeDiagnosticSeverity,
 } from './diagnostic-result'
+import { onRepareRename } from './handlers/on-prepare-rename'
+import { onRenameRequest } from './handlers/on-rename-request'
 import { setupI18n, Translations } from './i18n/i18n'
-import { Lexer } from './lexer'
-import { Parser } from './parser'
 import { allTags } from './tags'
-import { BBCodeComponent, diagnoseBBCodeAST } from './tags/tag'
+import { diagnoseBBCodeAST } from './tags/tag'
 
 function _buildDiagnosticMessage(
   error: DiagnosticError,
@@ -92,16 +94,8 @@ function _buildSeverity(
   }
 }
 
-function _loadData(text: TextDocument): BBCodeComponent[] {
-  const lexer = new Lexer(text.getText())
-  lexer.scanAll()
-  const parser = new Parser(lexer.tokens())
-  parser.parse()
-  return parser.ast()
-}
-
 function _dumpDiagnosticErrors(text: TextDocument): Diagnostic[] {
-  const ast = _loadData(text)
+  const ast = parseAST(text)
   return diagnoseBBCodeAST(ast).map((e) =>
     Diagnostic.create(
       { start: text.positionAt(e.start), end: text.positionAt(e.end) },
@@ -118,7 +112,7 @@ function _dumpDiagnosticErrors(text: TextDocument): Diagnostic[] {
 const _conn = createConnection(ProposedFeatures.all)
 let _i18n: Translations
 
-_conn.console.log('>>> [conn] hello the server started')
+_conn.console.log('>>> [conn] hello the BBCode language server is started')
 
 // Create a simple text document manager.
 const documents = new TextDocuments(TextDocument)
@@ -151,10 +145,15 @@ _conn.onInitialize((params: InitializeParams) => {
         resolveProvider: true,
         triggerCharacters: ['['],
       },
+      codeActionProvider: true,
+      renameProvider: {
+        prepareProvider: true,
+      },
       diagnosticProvider: {
         interFileDependencies: false,
         workspaceDiagnostics: false,
       },
+      // linkedEditingRangeProvider: true,
     },
   }
   if (hasWorkspaceFolderCapability) {
@@ -172,6 +171,52 @@ _conn.onInitialized(() => {
     // Register for all configuration changes.
     void _conn.client.register(DidChangeConfigurationNotification.type)
   }
+
+  _conn.onCodeAction((params) => {
+    if (params.context.triggerKind !== CodeActionTriggerKind.Invoked) {
+      // Only handle invoked code actions, skip automatically triggered ones.
+      return
+    }
+    _conn.console.log(`[conn] onCodeAction`)
+    return []
+  })
+
+  _conn.onCodeActionResolve((params) => {
+    _conn.console.log(`[conn] onCodeActionResolve`)
+    return params
+  })
+
+  _conn.onPrepareRename((params) => {
+    const document = documents.get(params.textDocument.uri)
+    if (document === undefined) {
+      // Unreachable.
+      _conn.console.log('[conn] onPrepareRename: text document not found')
+      return
+    }
+    return onRepareRename(document, params.position)
+  })
+
+  _conn.onRenameRequest((params) => {
+    const document = documents.get(params.textDocument.uri)
+    if (document === undefined) {
+      // Unreachable.
+      _conn.console.log('[conn] onRenameRequest: text document not found')
+      return
+    }
+
+    const edits = onRenameRequest(document, params.position, params.newName)
+    if (edits === undefined) {
+      // Can not rename
+      return
+    }
+
+    return {
+      changes: {
+        [params.textDocument.uri]: edits,
+      },
+    }
+  })
+
   if (hasWorkspaceFolderCapability) {
     _conn.workspace.onDidChangeWorkspaceFolders((_event) => {
       _conn.console.log('Workspace folder change event received.')
@@ -234,6 +279,16 @@ function getDocumentSettings(resource: string): Thenable<BBCodeLspSettings> {
   return result
 }
 
+async function validateTextDocument(
+  textDocument: TextDocument,
+): Promise<Diagnostic[]> {
+  const settings = await getDocumentSettings(textDocument.uri)
+  return _dumpDiagnosticErrors(textDocument).slice(
+    0,
+    settings.maxNumberOfProblems,
+  )
+}
+
 // Only keep settings for open documents
 documents.onDidClose((e) => {
   documentSettings.delete(e.document.uri)
@@ -254,16 +309,6 @@ documents.onDidChangeContent((change) => {
   void validateTextDocument(change.document)
 })
 
-async function validateTextDocument(
-  textDocument: TextDocument,
-): Promise<Diagnostic[]> {
-  const settings = await getDocumentSettings(textDocument.uri)
-  return _dumpDiagnosticErrors(textDocument).slice(
-    0,
-    settings.maxNumberOfProblems,
-  )
-}
-
 _conn.onDidChangeWatchedFiles((_change) => {
   // Monitored files have change in VSCode
   _conn.console.log('We received a file change event')
@@ -277,9 +322,6 @@ _conn.onCompletion((params: TextDocumentPositionParams): CompletionItem[] => {
 // This handler resolves additional information for the item selected in
 // the completion list.
 _conn.onCompletionResolve((item: CompletionItem): CompletionItem => {
-  _conn.console.log(
-    `>>> [conn] onCompletionResolve: item=${JSON.stringify(item.label)}`,
-  )
   const targetItem = allTags.find((e) => e.label == item.label)
   if (targetItem !== undefined) {
     item.detail = targetItem.description(_i18n)

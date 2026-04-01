@@ -1,5 +1,6 @@
 import { Color } from 'vscode-languageserver'
 import { DiagErr, DiagnosticError } from '../diagnostic-result'
+import { hexToColor } from '../utils'
 
 export const colorNames = new Set([
   'aliceblue',
@@ -174,7 +175,7 @@ export function colorToRgba(color: string | undefined): Color | undefined {
   return colorNameToRgba.get(color) ?? hexToColor(color)
 }
 
-const colorNameToRgba = new Map<string, Color>([
+export const colorNameToRgba = new Map<string, Color>([
   ['aliceblue', { red: 0.941, green: 0.973, blue: 1, alpha: 1 }],
   ['antiquewhite', { red: 0.98, green: 0.922, blue: 0.843, alpha: 1 }],
   ['aqua', { red: 0, green: 1, blue: 1, alpha: 1 }],
@@ -324,27 +325,3 @@ const colorNameToRgba = new Map<string, Color>([
   ['yellow', { red: 1, green: 1, blue: 0, alpha: 1 }],
   ['yellowgreen', { red: 0.604, green: 0.804, blue: 0.196, alpha: 1 }],
 ])
-
-function hexToColor(hex: string): Color | undefined {
-  const match = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
-  if (match) {
-    return {
-      red: Number.parseInt(match[1], 16) / 255,
-      green: Number.parseInt(match[2], 16) / 255,
-      blue: Number.parseInt(match[3], 16) / 255,
-      alpha: 1,
-    }
-  }
-
-  const shortMatch = /^#?([a-f\d])([a-f\d])([a-f\d])$/i.exec(hex)
-  if (shortMatch) {
-    return {
-      red: Number.parseInt(shortMatch[1] + shortMatch[1], 16) / 255,
-      green: Number.parseInt(shortMatch[2] + shortMatch[2], 16) / 255,
-      blue: Number.parseInt(shortMatch[3] + shortMatch[3], 16) / 255,
-      alpha: 1,
-    }
-  }
-
-  return
-}

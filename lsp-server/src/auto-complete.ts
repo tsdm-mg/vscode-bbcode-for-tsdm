@@ -9,7 +9,8 @@ import { TextDocument } from 'vscode-languageserver-textdocument'
 import { allTags, Tag } from './tags'
 import { AlignTag } from './tags/align'
 import { FontSizeTag } from './tags/font-size'
-import { colorNames } from './validators/color-validator'
+import { colorToHex } from './utils'
+import { colorNames, colorNameToRgba } from './validators/color-validator'
 
 const allTagCompletionItems: CompletionItem[] = allTags.flatMap((tag) =>
   tagToCompletionItem(tag),
@@ -63,8 +64,11 @@ function tagToCompletionItem(tag: Tag): CompletionItem[] {
 function attrListToCompletionItems(attrList: string[]): CompletionItem[] {
   return attrList.map((attr) => ({
     label: attr,
-    kind: CompletionItemKind.Enum,
-    detail: attr,
+    kind: CompletionItemKind.Color,
+    detail: colorNameToRgba.has(attr)
+      ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        colorToHex(colorNameToRgba.get(attr)!)
+      : attr,
     insertText: attr,
     insertTextFormat: InsertTextFormat.PlainText,
   }))

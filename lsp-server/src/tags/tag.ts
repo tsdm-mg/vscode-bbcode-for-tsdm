@@ -404,7 +404,7 @@ export abstract class BBCodeTagBase implements BBCodeTag {
    *
    * That caller MUST ensure attribute is not undefined.
    */
-  private attrRange(): DocRange {
+  attrRange(): DocRange {
     return {
       start: this.start + 1 + this.name.length + 1,
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

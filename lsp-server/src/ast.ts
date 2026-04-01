@@ -66,3 +66,38 @@ function findComponentAtOffset(
 
   throw new TypeError('unhandled bbcode component type')
 }
+
+/**
+ * Filter and return all components in the AST satisfy a condition.
+ *
+ * The returned component list is a flattened one that all components in the list
+ * are targets but their children fields are kept. So if the caller traverse the
+ * returned list, duplicate nodes may found.
+ */
+export function filterASTComponents(
+  ast: BBCodeComponent[],
+  pred: (c: BBCodeComponent) => boolean,
+): BBCodeComponent[] {
+  const result: BBCodeComponent[] = []
+
+  function walk(component: BBCodeComponent) {
+    if (pred(component)) {
+      result.push(component)
+    }
+    if (component instanceof BBCodeText) {
+      // Do nothing.
+    } else if (component instanceof BBCodeTagBase) {
+      for (const child of component.children) {
+        walk(child)
+      }
+    } else {
+      throw new TypeError('unhandled bbcode component type')
+    }
+  }
+
+  for (const component of ast) {
+    walk(component)
+  }
+
+  return result
+}

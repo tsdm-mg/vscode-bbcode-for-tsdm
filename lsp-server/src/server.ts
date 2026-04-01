@@ -21,6 +21,8 @@ import {
   DiagnosticError,
   DiagnosticSeverity as BBCodeDiagnosticSeverity,
 } from './diagnostic-result'
+import { onColorPresentation } from './handlers/on-color-presentation'
+import { onDocumentColor } from './handlers/on-document-color'
 import { onRepareRename } from './handlers/on-prepare-rename'
 import { onRenameRequest } from './handlers/on-rename-request'
 import { setupI18n, Translations } from './i18n/i18n'
@@ -149,6 +151,7 @@ _conn.onInitialize((params: InitializeParams) => {
       renameProvider: {
         prepareProvider: true,
       },
+      colorProvider: true,
       diagnosticProvider: {
         interFileDependencies: false,
         workspaceDiagnostics: false,
@@ -215,6 +218,20 @@ _conn.onInitialized(() => {
         [params.textDocument.uri]: edits,
       },
     }
+  })
+
+  _conn.onDocumentColor((params) => {
+    const document = documents.get(params.textDocument.uri)
+    if (document === undefined) {
+      // Unreachable.
+      _conn.console.log('[conn] onDocumentColor: text document not found')
+      return
+    }
+
+    return onDocumentColor(document)
+  })
+  _conn.onColorPresentation((params) => {
+    return [onColorPresentation(params.color)]
   })
 
   if (hasWorkspaceFolderCapability) {

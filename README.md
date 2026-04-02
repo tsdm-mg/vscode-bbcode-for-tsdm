@@ -4,16 +4,34 @@ VSCode扩展，支持TSDM风格的BBCode。
 
 ![intro.gif](./docs/images/intro.gif)
 
+## 用法
+
+自动识别`.bbcode`和`.bbcode.txt`后缀的文件，打开上述文件名后缀的文件即可。
+
+或手动将文件识别的语言改为bbcode。
+
 ## 功能
 
 * [x] 标签补全
-* [x] html补全功能（已集成VSCode内置的html支持）
-* [ ] 语法检查（language-server）
-  * [ ] 未闭合的标签
-  * [ ] 未成对的标签
-  * [ ] 未知的标签
-  * [ ] 无效的标签属性
-  * [ ] 错误的标签嵌套顺序
+* [x] html补全（已集成VSCode内置的html支持）
+* [x] 标签属性补全
+  * [x] `[size]`
+  * [x] `[color]`，`[backcolor]`
+  * [x] `[align]`
+* [x] 重命名标签 `editor.action.rename`
+* [x] 标签首尾跳转 `editor.action.revealDefinition`
+* [x] 标签悬浮提示 `editor.action.showHover`
+* [x] 语法检查（language-server）
+  * [x] 未知的标签  [DiagErrUnknownTag](./docs/lsp/errors/DiagErrUnknownTag.md)
+  * [x] 标签没有闭合 [DiagErrTagNotClosed](./docs/lsp/errors/DiagErrTagNotClosed.md)
+  * [x] 标签没有开头 [DiagErrTagNotOpened](./docs/lsp/errors/DiagErrTagNotOpened.md)
+  * [x] 无效的标签属性 [DiagErrInvalidAttributeValue](./docs/lsp/errors/DiagErrInvalidAttributeValue.md)
+  * [x] 标签需要填写属性  [DiagErrAttributeRequired.](./docs/lsp/errors/DiagErrAttributeRequired.md)
+  * [x] 标签不支持填写属性 [DiagErrAttributeNotAllowed](./docs/lsp/errors/DiagErrAttributeNotAllowed.md)
+  * [x] 标签效果冲突 [DiagErrConflictStyle](./docs/lsp/errors/DiagErrConflictStyle.md)
+  * [x] `[color]`和`[backcolor]`颜色无效 [DiagErrInvalidColor](./docs/lsp/errors/DiagErrInvalidColor.md)
+  * [x] `[img]`图片大小无效 [DiagErrInvalidImageSize](./docs/lsp/errors/DiagErrInvalidImageSize.md)
+  * [x] `[url]`缺少链接 [DiagErrUrlTargetRequired](./docs/lsp/errors/DiagErrUrlTargetRequired.md)
 * [ ] 风格检查（linter）
   * [ ] 空标签
   * [ ] 块标签后没有换行
@@ -42,6 +60,7 @@ VSCode扩展，支持TSDM风格的BBCode。
 * 表格行`tr`
 * 表格单元格`td`
 * 下划线`u`
+* 链接`url`
 * 提醒用户`@`
 
 ## 开发
@@ -50,4 +69,12 @@ VSCode扩展，支持TSDM风格的BBCode。
 
 `pnpm install`
 
+### 调试
+
 按F5或下方`Run Extension`开始调试
+
+或`pnpm watch`
+
+### 打包
+
+`pnpm package:vsix`

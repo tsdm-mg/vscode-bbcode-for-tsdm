@@ -1,6 +1,6 @@
 # DiagErrInvalidImageSize
 
-`DiagErrInvalidImageSize`是值在`[img]`标签中标注的图片大小的写法有问题。
+`DiagErrInvalidImageSize`是指在`[img]`标签中标注的图片大小的写法有问题。
 
 ## Fix
 

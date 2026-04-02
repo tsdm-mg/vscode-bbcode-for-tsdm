@@ -23,8 +23,10 @@ import {
 } from './diagnostic-result'
 import { ComponentTypeNotHandledError } from './error'
 import { onColorPresentation } from './handlers/on-color-presentation'
+import { onDefinition } from './handlers/on-definition'
 import { onDocumentColor } from './handlers/on-document-color'
 import { onDocumentLinks } from './handlers/on-document-links'
+import { onHover } from './handlers/on-hover'
 import { onRepareRename } from './handlers/on-prepare-rename'
 import { onRenameRequest } from './handlers/on-rename-request'
 import { setupI18n, Translations } from './i18n/i18n'
@@ -169,6 +171,8 @@ _conn.onInitialize((params: InitializeParams) => {
       documentLinkProvider: {
         resolveProvider: true,
       },
+      definitionProvider: true,
+      hoverProvider: true,
     },
   }
   if (hasWorkspaceFolderCapability) {
@@ -251,13 +255,59 @@ _conn.onInitialized(() => {
     const document = documents.get(params.textDocument.uri)
     if (document === undefined) {
       // Unreachable.
-      _conn.console.log('[conn] onPrepareRename: text document not found')
+      _conn.console.log('[conn] onDocumentLinks: text document not found')
       return
     }
 
     const links = onDocumentLinks(document, 'https://tsdm39.com/')
-    _conn.console.log(`onDocumentLinks: ${JSON.stringify(links)}`)
     return links
+  })
+
+  _conn.onDefinition((params) => {
+    const document = documents.get(params.textDocument.uri)
+    if (document === undefined) {
+      // Unreachable.
+      _conn.console.log('[conn] onDefinition: text document not found')
+      return
+    }
+
+    const defRange = onDefinition(document, params.position)
+    if (defRange === undefined) {
+      return
+    }
+    return [
+      {
+        range: defRange,
+        uri: params.textDocument.uri,
+      },
+    ]
+  })
+
+  _conn.onHover((params) => {
+    const document = documents.get(params.textDocument.uri)
+    if (document === undefined) {
+      // Unreachable.
+      _conn.console.log('[conn] onHover: text document not found')
+      return
+    }
+
+    const hoverInfo = onHover(document, params.position)
+    if (hoverInfo === undefined) {
+      return
+    }
+
+    const { tagName, range } = hoverInfo
+    const description = allTags
+      .find((e) => e.label == tagName)
+      ?.description(_i18n)
+    if (description === undefined) {
+      return
+    }
+
+    return {
+      contents: description,
+      range: range,
+    }
   })
 
   if (hasWorkspaceFolderCapability) {

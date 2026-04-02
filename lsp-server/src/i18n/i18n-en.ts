@@ -78,5 +78,9 @@ export const i18nEn: Translations = {
     tagNotOpened: function (name: string): string {
       return `tag ${name} not opened`
     },
+    conflictStyle: function (outerTag: string, innerTag: string): string {
+      return `tag ${innerTag} inside ${outerTag} may override ${outerTag} style`
+    },
+    urlTargetRequired: 'link target required',
   },
 }

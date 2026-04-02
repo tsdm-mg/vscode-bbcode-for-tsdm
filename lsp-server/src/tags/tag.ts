@@ -3,6 +3,7 @@ import {
   DiagnosticError,
   DiagnosticMessage,
 } from '../diagnostic-result'
+import { ComponentTypeNotHandledError } from '../error'
 import { DocRange } from '../range'
 import { TagHead, TagTail } from '../token'
 
@@ -31,6 +32,10 @@ export class BBCodeText {
   end: number
 
   toBBCode(): string {
+    return this._data
+  }
+
+  textContent(): string {
     return this._data
   }
 }
@@ -90,7 +95,9 @@ export interface BBCodeTag {
    * The function accepts a list of tags as children to validate and
    * returns true if tags are all valid to be the children of current tag.
    */
-  childrenValidator?(children: BBCodeComponent[]): DiagnosticError[]
+  childrenValidator?(
+    children: BBCodeComponent[],
+  ): (DiagnosticError | DiagnosticMessage)[]
 
   /**
    * An optional function to validate parent tag.
@@ -134,6 +141,11 @@ export interface BBCodeTag {
    * BBCode of attribute.
    */
   attributeBBCode(): string
+
+  /**
+   * Inner plain text content, without styling.
+   */
+  textContent(): string
 }
 
 /**
@@ -163,7 +175,9 @@ export abstract class BBCodeTagBase implements BBCodeTag {
   selfClosed = false
   children: BBCodeComponent[]
   attributeValidator?(attr: string | undefined): DiagnosticError[]
-  childrenValidator?(children: BBCodeComponent[]): DiagnosticError[]
+  childrenValidator?(
+    children: BBCodeComponent[],
+  ): (DiagnosticError | DiagnosticMessage)[]
   parentValidator?(parent: BBCodeComponent): DiagnosticError[]
   additionalValidator?(): DiagnosticError[]
 
@@ -278,6 +292,16 @@ export abstract class BBCodeTagBase implements BBCodeTag {
       )
     }
 
+    if (this.childrenValidator !== undefined) {
+      const childrenErrors = this.childrenValidator(this.children).map(
+        (err) => {
+          return '_kind' in err ? this.makeTagNameDiagnosticMessage(err) : err
+        },
+      )
+
+      messages.push(...childrenErrors)
+    }
+
     for (const child of this.children) {
       if (child instanceof BBCodeText) {
         // Do nothing.
@@ -286,7 +310,7 @@ export abstract class BBCodeTagBase implements BBCodeTag {
         messages.push(...child.diagnose())
       } else {
         // Unreachable.
-        throw new TypeError('unsupported bbcode component ty')
+        throw new ComponentTypeNotHandledError()
       }
     }
 
@@ -417,9 +441,7 @@ export abstract class BBCodeTagBase implements BBCodeTag {
    *
    * Use this range of message for tag-wide diagnostic errors.
    */
-  private makeTagHeadDiagnosticMessage(
-    error: DiagnosticError,
-  ): DiagnosticMessage {
+  makeTagHeadDiagnosticMessage(error: DiagnosticError): DiagnosticMessage {
     const { start, end } = this.tagHeadRange()
     return {
       start,
@@ -460,6 +482,22 @@ export abstract class BBCodeTagBase implements BBCodeTag {
       end,
       error,
     }
+  }
+
+  textContent(): string {
+    const ret: string[] = []
+
+    for (const child of this.children) {
+      if (child instanceof BBCodeText) {
+        ret.push(child.textContent())
+      } else if (child instanceof BBCodeTagBase) {
+        ret.push(child.textContent())
+      } else {
+        throw new ComponentTypeNotHandledError()
+      }
+    }
+
+    return ret.join('')
   }
 }
 

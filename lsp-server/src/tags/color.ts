@@ -1,5 +1,10 @@
-import { BBCodeTagBase } from './tag'
-import { DiagErr, DiagnosticError } from '../diagnostic-result'
+import { BBCodeComponent, BBCodeTagBase } from './tag'
+import { filterASTComponents } from '../ast'
+import {
+  DiagErr,
+  DiagnosticError,
+  DiagnosticMessage,
+} from '../diagnostic-result'
 import { colorValidator } from '../validators/color-validator'
 
 export class ColorTag extends BBCodeTagBase {
@@ -11,5 +16,20 @@ export class ColorTag extends BBCodeTagBase {
     }
 
     return colorValidator(attr)
+  }
+
+  childrenValidator(
+    children: BBCodeComponent[],
+  ): (DiagnosticError | DiagnosticMessage)[] {
+    return filterASTComponents(
+      children,
+      (component: BBCodeComponent) =>
+        component instanceof BBCodeTagBase && component.name === 'url',
+      true,
+    ).map((urlChild) =>
+      (urlChild as BBCodeTagBase).makeTagHeadDiagnosticMessage(
+        DiagErr.conflictStyle('color', 'url'),
+      ),
+    )
   }
 }

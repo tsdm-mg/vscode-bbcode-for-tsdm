@@ -1,6 +1,7 @@
 import { Position, TextEdit } from 'vscode-languageserver'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { getComponentAtOffset, parseAST } from '../ast'
+import { ComponentTypeNotHandledError } from '../error'
 import { BBCodeTagBase, BBCodeText } from '../tags/tag'
 
 export function onRenameRequest(
@@ -63,5 +64,5 @@ export function onRenameRequest(
     return edits
   }
 
-  throw new TypeError('unhandled bbcode component type')
+  throw new ComponentTypeNotHandledError()
 }

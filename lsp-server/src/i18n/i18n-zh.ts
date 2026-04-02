@@ -74,5 +74,9 @@ export const i18nZh: Translations = {
     tagNotOpened: function (name: string): string {
       return `标签 ${name} 缺少对应的开始标签`
     },
+    conflictStyle: function (outerTag: string, innerTag: string): string {
+      return `标签 ${innerTag} 在 ${outerTag} 内部可能覆盖 ${outerTag} 的样式`
+    },
+    urlTargetRequired: '标签 url 没有填写网页链接',
   },
 }

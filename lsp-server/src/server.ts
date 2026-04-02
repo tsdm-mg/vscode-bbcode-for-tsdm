@@ -21,8 +21,10 @@ import {
   DiagnosticError,
   DiagnosticSeverity as BBCodeDiagnosticSeverity,
 } from './diagnostic-result'
+import { ComponentTypeNotHandledError } from './error'
 import { onColorPresentation } from './handlers/on-color-presentation'
 import { onDocumentColor } from './handlers/on-document-color'
+import { onDocumentLinks } from './handlers/on-document-links'
 import { onRepareRename } from './handlers/on-prepare-rename'
 import { onRenameRequest } from './handlers/on-rename-request'
 import { setupI18n, Translations } from './i18n/i18n'
@@ -68,8 +70,16 @@ function _buildDiagnosticMessage(
       return d.tagNotOpened(error.name)
     }
 
+    case 'DiagErrConflictStyle': {
+      return d.conflictStyle(error.outerTag, error.innerTag)
+    }
+
+    case 'DiagErrUrlTargetRequired': {
+      return d.urlTargetRequired
+    }
+
     default: {
-      throw new Error('unsupported error kind')
+      throw new ComponentTypeNotHandledError()
     }
   }
 }
@@ -91,7 +101,7 @@ function _buildSeverity(
     }
 
     default: {
-      throw new Error('unsupported bbcode severity kind')
+      throw new TypeError('error severity type not handled')
     }
   }
 }
@@ -156,7 +166,9 @@ _conn.onInitialize((params: InitializeParams) => {
         interFileDependencies: false,
         workspaceDiagnostics: false,
       },
-      // linkedEditingRangeProvider: true,
+      documentLinkProvider: {
+        resolveProvider: true,
+      },
     },
   }
   if (hasWorkspaceFolderCapability) {
@@ -230,8 +242,22 @@ _conn.onInitialized(() => {
 
     return onDocumentColor(document)
   })
+
   _conn.onColorPresentation((params) => {
     return [onColorPresentation(params.color)]
+  })
+
+  _conn.onDocumentLinks((params) => {
+    const document = documents.get(params.textDocument.uri)
+    if (document === undefined) {
+      // Unreachable.
+      _conn.console.log('[conn] onPrepareRename: text document not found')
+      return
+    }
+
+    const links = onDocumentLinks(document, 'https://tsdm39.com/')
+    _conn.console.log(`onDocumentLinks: ${JSON.stringify(links)}`)
+    return links
   })
 
   if (hasWorkspaceFolderCapability) {

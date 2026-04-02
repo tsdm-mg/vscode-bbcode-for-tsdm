@@ -41,6 +41,8 @@ export type DiagnosticError =
   | DiagErrInvalidImageSize
   | DiagErrTagNotClosed
   | DiagErrTagNotOpened
+  | DiagErrConflictStyle
+  | DiagErrUrlTargetRequired
 
 export const DiagErr = {
   unknownTag: (name: string): DiagErrUnknownTag => ({
@@ -91,6 +93,21 @@ export const DiagErr = {
     _kind: 'DiagErrTagNotOpened',
     severity: 'error',
     name,
+  }),
+
+  conflictStyle: (
+    outerTag: string,
+    innerTag: string,
+  ): DiagErrConflictStyle => ({
+    _kind: 'DiagErrConflictStyle',
+    severity: 'warning',
+    outerTag,
+    innerTag,
+  }),
+
+  urlTargetRequired: (): DiagErrUrlTargetRequired => ({
+    _kind: 'DiagErrUrlTargetRequired',
+    severity: 'error',
   }),
 }
 
@@ -204,4 +221,55 @@ export interface DiagErrTagNotClosed {
    * Name of the tag.
    */
   name: string
+}
+
+/**
+ * Style conflict on tags.
+ *
+ * When code is converted and rendered in HTML, some tags may
+ * be ineffective because their styles are overrided by other tags.
+ *
+ * This often occurs when inner tag has default style that overlaps
+ * with outer tags.
+ *
+ * For example, for `[color=red][url]...[/url][/color]`, the `color`
+ * tag not works because `url` tag has default color on inner contents.
+ *
+ * Note that style overriding is usual, this error is only used when the
+ * style conflict makes tag not work.
+ *
+ * When rasing this error, it is recommended to target on the inner tag.
+ *
+ * To fix this error, generally, swap tag nesting order is a choice.
+ *
+ * This error is only a warning because it only breaks part of style.
+ */
+export interface DiagErrConflictStyle {
+  _kind: 'DiagErrConflictStyle'
+
+  severity: 'warning'
+
+  /**
+   * Tag name of the outer tag, not works.
+   */
+  outerTag: string
+
+  /**
+   * Tag name of the inner tag, overrides the style of `outerTag`.
+   */
+  innerTag: string
+}
+
+/**
+ * Url tag should have an url target.
+ *
+ * The url target can be positioned at:
+ *
+ * - url tag attribute.
+ * - url tag children.
+ */
+export interface DiagErrUrlTargetRequired {
+  _kind: 'DiagErrUrlTargetRequired'
+
+  severity: 'error'
 }

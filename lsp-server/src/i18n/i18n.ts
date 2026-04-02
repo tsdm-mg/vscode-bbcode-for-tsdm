@@ -16,6 +16,8 @@ export interface Translations {
     invalidImageSize: (attr?: string) => string
     tagNotClosed: (name: string) => string
     tagNotOpened: (name: string) => string
+    conflictStyle: (outerTag: string, innerTag: string) => string
+    urlTargetRequired: string
   }
 }
 

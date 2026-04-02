@@ -1,4 +1,5 @@
 import { TextDocument } from 'vscode-languageserver-textdocument'
+import { ComponentTypeNotHandledError } from './error'
 import { Lexer } from './lexer'
 import { Parser } from './parser'
 import { rangeContainsOffset } from './range'
@@ -64,7 +65,7 @@ function findComponentAtOffset(
     return undefined
   }
 
-  throw new TypeError('unhandled bbcode component type')
+  throw new ComponentTypeNotHandledError()
 }
 
 /**
@@ -73,14 +74,28 @@ function findComponentAtOffset(
  * The returned component list is a flattened one that all components in the list
  * are targets but their children fields are kept. So if the caller traverse the
  * returned list, duplicate nodes may found.
+ *
+ * Set `skipIsolatedStyle` to true if the filter process should skip tags that
+ * isolate styles, like skip `[code]`s and their children.
  */
 export function filterASTComponents(
   ast: BBCodeComponent[],
   pred: (c: BBCodeComponent) => boolean,
+  skipIsolatedStyle = false,
 ): BBCodeComponent[] {
   const result: BBCodeComponent[] = []
 
   function walk(component: BBCodeComponent) {
+    if (
+      skipIsolatedStyle &&
+      component instanceof BBCodeTagBase &&
+      component.name === 'code'
+    ) {
+      // The `code` tag will isolate outer styles and inner styles.
+      // Skip styles here.
+      return
+    }
+
     if (pred(component)) {
       result.push(component)
     }
@@ -91,7 +106,7 @@ export function filterASTComponents(
         walk(child)
       }
     } else {
-      throw new TypeError('unhandled bbcode component type')
+      throw new ComponentTypeNotHandledError()
     }
   }
 

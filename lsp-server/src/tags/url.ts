@@ -1,16 +1,15 @@
-import { DiagnosticError } from '../diagnostic-result'
+import { DiagErr, DiagnosticError } from '../diagnostic-result'
 import { BBCodeTagBase, BBCodeText } from './tag'
 
 export class UrlTag extends BBCodeTagBase {
-  readonly name = 'url'
+  public readonly name = 'url'
 
   attributeValidator(attr: string | undefined): DiagnosticError[] {
     if (attr === undefined) {
       // Without attribute.
       const childTag = this.findTag((tag) => tag instanceof BBCodeText)
-      if (childTag === undefined) {
-        // ???
-        return []
+      if (childTag === undefined || childTag.textContent().length === 0) {
+        return [DiagErr.urlTargetRequired()]
       }
 
       // TODO: Add url format check.
@@ -19,6 +18,10 @@ export class UrlTag extends BBCodeTagBase {
     }
 
     // With attribute.
+
+    if (attr.length === 0) {
+      return [DiagErr.urlTargetRequired()]
+    }
 
     // TODO: Add url format check.
 

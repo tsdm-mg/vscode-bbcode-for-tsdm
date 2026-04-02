@@ -119,7 +119,7 @@ function _dumpDiagnosticErrors(text: TextDocument): Diagnostic[] {
       source: 'bbcode-tsdm',
       codeDescription: {
         href:
-          'https://https://github.com/tsdm-mg/vscode-bbcode-for-tsdm/docs/lsp/errors/' +
+          'https://github.com/tsdm-mg/vscode-bbcode-for-tsdm/blob/master/docs/lsp/errors/' +
           e.error._kind +
           '.md',
       },

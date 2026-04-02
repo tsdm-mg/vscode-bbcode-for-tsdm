@@ -110,14 +110,20 @@ function _buildSeverity(
 
 function _dumpDiagnosticErrors(text: TextDocument): Diagnostic[] {
   const ast = parseAST(text)
-  return diagnoseBBCodeAST(ast).map((e) =>
-    Diagnostic.create(
-      { start: text.positionAt(e.start), end: text.positionAt(e.end) },
-      _buildDiagnosticMessage(e.error, _i18n),
-      _buildSeverity(e.error.severity),
-      e.error._kind,
-      'bbcode-tsdm',
-    ),
+  return diagnoseBBCodeAST(ast).map(
+    (e): Diagnostic => ({
+      range: { start: text.positionAt(e.start), end: text.positionAt(e.end) },
+      message: _buildDiagnosticMessage(e.error, _i18n),
+      severity: _buildSeverity(e.error.severity),
+      code: e.error._kind,
+      source: 'bbcode-tsdm',
+      codeDescription: {
+        href:
+          'https://https://github.com/tsdm-mg/vscode-bbcode-for-tsdm/docs/lsp/errors/' +
+          e.error._kind +
+          '.md',
+      },
+    }),
   )
 }
 

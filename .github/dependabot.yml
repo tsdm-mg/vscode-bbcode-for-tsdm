@@ -6,3 +6,6 @@ updates:
       - "/lsp-server"
     schedule:
       interval: "monthly"
+    ignore:
+      - dependency-name: "*vscode*"
+      - dependency-name: "@types/node"
